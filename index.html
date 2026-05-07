@@ -1,0 +1,1190 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Контент-план ВК PRO (Облако)</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
+        :root {
+            var(--primary): #4f46e5; 
+            --primary-hover: #4338ca; 
+            --primary-light: #e0e7ff;
+            --bg-body: #f8fafc; 
+            --bg-surface: #ffffff;
+            --border-light: #e2e8f0; 
+            --border-dark: #cbd5e1;
+            --text-main: #0f172a; 
+            --text-secondary: #475569; 
+            --text-muted: #94a3b8;
+            --business-color: #4f46e5; 
+            --social-color: #f59e0b;
+            --org-kos: #0ea5e9; --org-srt: #10b981; --org-si: #8b5cf6;  
+            
+            --radius-sm: 8px; 
+            --radius-md: 12px; 
+            --radius-lg: 20px; 
+            --radius-pill: 9999px;
+            --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+            --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -2px rgba(0, 0, 0, 0.05);
+            --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.05), 0 4px 6px -4px rgba(0, 0, 0, 0.05);
+            --shadow-modal: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+            --transition: all 0.2s ease-in-out;
+        }
+
+        *, *::before, *::after { box-sizing: border-box; }
+        *:focus-visible { outline: none; box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.3); border-radius: inherit; }
+        
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: var(--radius-pill); }
+        ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+
+        body { 
+            font-family: 'Inter', sans-serif; 
+            margin: 0; padding: 0; 
+            display: flex; height: 100vh; 
+            background-color: var(--bg-body); 
+            color: var(--text-main); 
+            overflow: hidden; 
+            -webkit-font-smoothing: antialiased; 
+        }
+
+        .sidebar { 
+            width: 280px; background: var(--bg-surface); 
+            border-right: 1px solid var(--border-light); 
+            display: flex; flex-direction: column; 
+            padding: 24px; gap: 32px; 
+            overflow-y: auto; z-index: 2; flex-shrink: 0; 
+        }
+        .filter-group h3 { font-size: 11px; margin: 0 0 16px 0; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em; font-weight: 700; }
+        .checkbox-item { display: flex; align-items: center; gap: 12px; margin-bottom: 12px; font-size: 14px; color: var(--text-secondary); cursor: pointer; transition: var(--transition); font-weight: 500;}
+        .checkbox-item:hover { color: var(--text-main); }
+        .checkbox-item input[type="checkbox"] { accent-color: var(--primary); cursor: pointer; width: 18px; height: 18px; border-radius: 4px; border: 1px solid var(--border-dark);}
+        
+        .mini-cal { background: var(--bg-surface); border: 1px solid var(--border-light); border-radius: var(--radius-md); padding: 16px; font-size: 13px; box-shadow: var(--shadow-sm); }
+        .mini-cal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; font-weight: 600; font-size: 14px;}
+        .mini-cal-header button { background: var(--bg-body); border: none; cursor: pointer; color: var(--text-secondary); border-radius: var(--radius-sm); width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; transition: var(--transition); font-size: 16px;}
+        .mini-cal-header button:hover { background: var(--border-light); color: var(--text-main); }
+        .mini-day { cursor: pointer; padding: 6px 0; border-radius: var(--radius-sm); transition: var(--transition); text-align: center; color: var(--text-secondary); font-weight: 500;}
+        .mini-day:hover { background: var(--bg-body); color: var(--text-main);}
+        .mini-day.active { background: var(--primary); color: white; font-weight: 600; box-shadow: 0 4px 6px rgba(79, 70, 229, 0.25); }
+
+        .main-view { flex: 1; display: flex; flex-direction: column; background: var(--bg-body); min-width: 0; }
+        header { padding: 20px 32px; border-bottom: 1px solid var(--border-light); display: flex; justify-content: space-between; align-items: center; background: var(--bg-surface); z-index: 10; }
+        .nav-controls { display: flex; align-items: center; gap: 16px; }
+        .nav-controls h2 { margin: 0 0 0 16px; font-weight: 700; font-size: 22px; min-width: 180px; color: var(--text-main); letter-spacing: -0.01em;}
+        
+        .btn { background: var(--bg-surface); border: 1px solid var(--border-dark); padding: 8px 16px; cursor: pointer; border-radius: var(--radius-sm); font-size: 14px; font-weight: 500; color: var(--text-secondary); transition: var(--transition); font-family: inherit; display: inline-flex; align-items: center; justify-content: center; box-shadow: var(--shadow-sm); }
+        .btn:hover { background: var(--bg-body); color: var(--text-main); border-color: var(--text-muted); }
+        .btn-icon { padding: 8px; width: 36px; height: 36px; font-size: 16px; font-weight: bold;}
+        .btn-primary { background: var(--primary); color: white; border: none; font-weight: 600; box-shadow: 0 2px 4px rgba(79, 70, 229, 0.3); }
+        .btn-primary:hover { background: var(--primary-hover); transform: translateY(-1px); box-shadow: 0 4px 6px rgba(79, 70, 229, 0.4); border-color: transparent; color: white;}
+        
+        .view-switcher { display: flex; background: var(--bg-body); padding: 4px; border-radius: var(--radius-sm); border: 1px solid var(--border-light); }
+        .view-switcher button { border: none; background: transparent; padding: 8px 16px; cursor: pointer; border-radius: 6px; font-weight: 500; color: var(--text-secondary); transition: var(--transition); font-family: inherit; font-size: 13px; }
+        .view-switcher button:hover { color: var(--text-main); }
+        .view-switcher button.active { background: var(--bg-surface); color: var(--text-main); font-weight: 600; box-shadow: var(--shadow-sm); }
+
+        .grid-container { flex: 1; overflow: hidden; position: relative; display: flex; flex-direction: column; padding: 24px 32px; gap: 24px; }
+        .month-view-wrapper { display: flex; flex-direction: column; height: 100%; box-shadow: var(--shadow-sm); border-radius: var(--radius-lg); background: var(--bg-surface); border: 1px solid var(--border-light); overflow: hidden;}
+        .month-days-header { display: grid; grid-template-columns: repeat(7, 1fr); background: #f8fafc; border-bottom: 1px solid var(--border-light); padding: 12px 0; font-size: 13px; font-weight: 600; color: var(--text-secondary); text-align: center; z-index: 5; }
+        .month-grid { display: grid; grid-template-columns: repeat(7, 1fr); grid-auto-rows: 1fr; flex: 1; background: var(--border-light); gap: 1px; overflow: hidden; }
+        
+        .grid-cell { padding: 12px; background: var(--bg-surface); cursor: pointer; transition: background 0.2s ease; display: flex; flex-direction: column; overflow: hidden; }
+        .grid-cell:hover { background: #f8fafc; }
+        .grid-cell.drag-over { background: var(--primary-light); box-shadow: inset 0 0 0 2px var(--primary); }
+        .grid-cell.past-day { background: #f8fafc; }
+        .grid-cell.past-day .event-card { opacity: 0.6; }
+        .grid-cell.past-day:hover .event-card { opacity: 1; }
+        .grid-cell.other-month { background: #f1f5f9; }
+        .grid-cell.other-month .day-num { color: var(--text-muted); }
+        .grid-cell.today .day-num { color: white; background: var(--primary); border-radius: var(--radius-pill); width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; margin-bottom: 8px; font-weight: 600; box-shadow: 0 2px 6px rgba(79,70,229,0.3); }
+        .day-num { font-size: 14px; margin-bottom: 8px; display: inline-block; font-weight: 600; color: var(--text-secondary); pointer-events: none; flex-shrink: 0; }
+
+        .cell-events-wrapper::-webkit-scrollbar { width: 4px; }
+        .cell-events-wrapper::-webkit-scrollbar-track { background: transparent; }
+        .cell-events-wrapper::-webkit-scrollbar-thumb { background: transparent; }
+        .cell-events-wrapper:hover::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+
+        .event-card { 
+            font-size: 12px; padding: 8px 10px; border-radius: var(--radius-sm); margin-bottom: 8px; 
+            background: var(--bg-surface); color: var(--text-main); 
+            border: 1px solid var(--border-light); border-left-width: 4px; 
+            cursor: grab; flex-shrink: 0; transition: var(--transition); 
+            display: flex; flex-direction: column; position: relative; 
+            box-shadow: 0 1px 2px rgba(0,0,0,0.02);
+            height: auto;
+        }
+        .event-card.is-planned { background: #ffffff; }
+        .event-card.is-planned:hover { transform: translateY(-2px); box-shadow: var(--shadow-md); border-color: var(--border-dark); }
+        .event-card.is-published { background: #f8fafc; border-color: #e2e8f0; opacity: 0.7; }
+        .event-card.is-published .event-title { color: var(--text-muted); text-decoration: line-through; text-decoration-color: rgba(0,0,0,0.2);}
+        .event-card.is-published:hover { opacity: 0.95; transform: translateY(-2px); box-shadow: var(--shadow-sm); border-color: var(--border-dark); text-decoration: none;}
+        .event-card:active { cursor: grabbing; transform: scale(0.98); box-shadow: var(--shadow-lg); }
+        
+        .event-header { display: flex; align-items: flex-start; gap: 6px;}
+        
+        .event-title { 
+            flex: 1; font-weight: 600; font-size: 12px; line-height: 1.35; 
+            word-break: break-word; display: block; 
+            pointer-events: none; margin-top: 1px;
+        }
+        
+        .status-toggle {
+            width: 14px; height: 14px; flex-shrink: 0; margin-top: 1px;
+            border-radius: 4px; border: 2px solid var(--border-dark);
+            display: flex; align-items: center; justify-content: center;
+            cursor: pointer; transition: var(--transition);
+            background: transparent; color: white; font-size: 10px; font-weight: bold;
+        }
+        .status-toggle:hover { border-color: var(--primary); box-shadow: 0 0 0 3px var(--primary-light); }
+        
+        .is-published .status-toggle { background: #10b981; border-color: #10b981; }
+        .is-published .status-toggle:hover { background: #059669; border-color: #059669; box-shadow: 0 0 0 3px #d1fae5; }
+
+        .event-meta { font-size: 10px; color: var(--text-muted); font-weight: 500; margin-top: 4px; }
+
+        .org-кос { border-left-color: var(--org-kos); } .org-срт { border-left-color: var(--org-srt); } .org-си { border-left-color: var(--org-si); }
+
+        .scrollable-view { flex: 1; overflow-y: auto; background: var(--bg-surface); border-radius: var(--radius-lg); box-shadow: var(--shadow-sm); border: 1px solid var(--border-light); }
+        .hour-row, .week-hour-row { display: flex; height: 100px; border-bottom: 1px solid var(--border-light); background: white; }
+        .time-col { width: 80px; font-size: 12px; font-weight: 500; color: var(--text-muted); text-align: right; padding-right: 16px; margin-top: -8px; flex-shrink: 0; pointer-events: none; }
+        .content-col, .week-day-cell { flex: 1; border-left: 1px solid var(--border-light); transition: background 0.2s ease; display: flex; flex-direction: column; gap: 8px; padding: 12px; overflow-y: auto; }
+        .content-col.drag-over, .week-day-cell.drag-over { background: var(--primary-light); box-shadow: inset 0 0 0 2px var(--primary); }
+
+        .week-view { display: flex; flex-direction: column; min-width: 1200px; }
+        .week-header-row { display: flex; border-bottom: 1px solid var(--border-light); position: sticky; top: 0; background: #f8fafc; z-index: 10; }
+        .week-time-header { width: 80px; flex-shrink: 0; }
+        .week-header-cell { flex: 1; text-align: center; padding: 16px 8px; border-left: 1px solid var(--border-light); font-size: 14px; font-weight: 600; color: var(--text-secondary); cursor: pointer; transition: var(--transition); }
+        .week-header-cell:hover { background: var(--bg-surface); color: var(--text-main); }
+        .week-header-cell.today { color: var(--primary); box-shadow: inset 0 -3px 0 var(--primary); background: var(--primary-light);}
+
+        .analytics-panel { width: 360px; border-left: 1px solid var(--border-light); padding: 32px 24px; background: var(--bg-surface); display: flex; flex-direction: column; gap: 24px; overflow-y: auto; z-index: 2; flex-shrink: 0; }
+        .stat-card { background: var(--bg-surface); padding: 24px; border-radius: var(--radius-md); border: 1px solid var(--border-light); box-shadow: var(--shadow-sm); }
+        .stat-card h4 { margin: 0 0 8px 0; font-size: 16px; color: var(--text-main); font-weight: 700; letter-spacing: -0.01em;}
+        .stat-subtitle { font-size: 13px; color: var(--text-muted); font-weight: 500; margin-bottom: 20px; display: block; }
+        
+        .carousel-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; background: #f8fafc; padding: 10px; border-radius: var(--radius-sm); border: 1px solid var(--border-light);}
+        .carousel-header button { border: none; background: var(--bg-surface); box-shadow: var(--shadow-sm); cursor: pointer; width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; border-radius: 6px; font-size: 16px; color: var(--text-secondary); transition: var(--transition); border: 1px solid var(--border-light);}
+        .carousel-header button:hover { background: var(--border-light); color: var(--text-main); }
+        .carousel-header h4 { margin: 0 0 2px 0; font-size: 15px; color: var(--primary); text-align: center; font-weight: 700; }
+        .carousel-header span { font-size: 11px; color: var(--text-muted); text-align: center; display: block; font-weight: 500;}
+
+        .chart-container { position: relative; height: 200px; transition: opacity 0.2s ease; margin-bottom: 16px;}
+        .chart-container.fade { opacity: 0; }
+        .recommendation-box { margin-top: 16px; padding: 14px 16px; background: var(--primary-light); border-radius: var(--radius-sm); font-size: 13px; color: var(--text-secondary); line-height: 1.5; border: 1px solid #c7d2fe;}
+        .recommendation-box strong { color: var(--primary); display: block; margin-bottom: 6px; font-weight: 600; font-size: 14px; }
+
+        .balance-bar { height: 10px; background: var(--bg-body); border-radius: var(--radius-pill); display: flex; overflow: hidden; margin: 10px 0 24px 0; box-shadow: inset 0 1px 2px rgba(0,0,0,0.05);}
+        .bar-bus { background: var(--business-color); transition: width 0.6s cubic-bezier(0.4, 0, 0.2, 1); }
+        .bar-soc { background: var(--social-color); transition: width 0.6s cubic-bezier(0.4, 0, 0.2, 1); }
+        .balance-labels { display: flex; justify-content: space-between; font-size: 13px; font-weight: 600; color: var(--text-main); }
+        .balance-labels span { color: var(--text-secondary); font-weight: 500;}
+
+        .checklist-container { display: flex; flex-direction: column; gap: 10px; margin-top: 16px; max-height: 340px; overflow-y: auto; padding-right: 8px; }
+        .checklist-item { 
+            display: flex; flex-direction: column; gap: 8px; padding: 14px 16px; 
+            border-radius: var(--radius-md); font-size: 13px; 
+            background: var(--bg-surface); border: 1px solid var(--border-light); 
+            transition: var(--transition); 
+        }
+        .checklist-item.present { border-left: 4px solid #10b981; cursor: pointer; }
+        .checklist-item.present:hover { transform: translateY(-2px); box-shadow: var(--shadow-sm); border-color: var(--border-dark); }
+        .checklist-item.missing { border-left: 4px solid var(--border-dark); background: #f8fafc; opacity: 0.9; }
+        
+        .checklist-header { display: flex; justify-content: space-between; align-items: center; width: 100%; }
+        .checklist-rubric-name { font-weight: 600; color: var(--text-main); font-size: 14px; }
+        .checklist-item.present .checklist-rubric-name { color: #065f46; }
+        .checklist-item.missing .checklist-rubric-name { color: var(--text-secondary); }
+        
+        .checklist-count { font-weight: 600; font-size: 11px; padding: 4px 10px; border-radius: var(--radius-pill); }
+        .checklist-item.present .checklist-count { background: #dcfce7; color: #166534; }
+        .checklist-item.missing .checklist-count { background: var(--border-light); color: var(--text-secondary); }
+        
+        .progress-track { width: 100%; height: 6px; background: var(--border-light); border-radius: var(--radius-pill); overflow: hidden; }
+        .progress-fill { height: 100%; background: #10b981; border-radius: var(--radius-pill); transition: width 0.3s ease; }
+
+        @keyframes fadeIn { from { opacity: 0; backdrop-filter: blur(0px); } to { opacity: 1; backdrop-filter: blur(6px); } }
+        @keyframes slideUp { from { opacity: 0; transform: translateY(20px) scale(0.98); } to { opacity: 1; transform: translateY(0) scale(1); } }
+
+        .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(15, 23, 42, 0.6); z-index: 1000; justify-content: center; align-items: center; animation: fadeIn 0.2s ease-out forwards; padding: 24px; }
+        .modal-content { background: var(--bg-surface); width: 600px; max-width: 100%; max-height: 90vh; overflow-y: auto; border-radius: var(--radius-lg); box-shadow: var(--shadow-modal); padding: 32px; display: flex; flex-direction: column; gap: 24px; animation: slideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1); border: 1px solid var(--border-light); }
+        .modal-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-light); padding-bottom: 20px; }
+        .modal-header h3 { margin: 0; font-size: 20px; font-weight: 700; color: var(--text-main); letter-spacing: -0.01em;}
+        .close-btn { background: #f1f5f9; border: none; font-size: 20px; cursor: pointer; color: var(--text-secondary); border-radius: 50%; width: 36px; height: 36px; display: flex; justify-content: center; align-items: center; transition: var(--transition); line-height: 1; }
+        .close-btn:hover { background: #fee2e2; color: #dc2626; transform: rotate(90deg);}
+        
+        .form-row { display: flex; gap: 24px; flex-wrap: wrap; }
+        .form-group { flex: 1; min-width: 200px; display: flex; flex-direction: column; gap: 8px; }
+        .form-group label { font-size: 13px; font-weight: 600; color: var(--text-secondary); }
+        .form-group input, .form-group select, .form-group textarea { width: 100%; padding: 12px 14px; border: 1px solid var(--border-dark); border-radius: var(--radius-sm); font-family: inherit; font-size: 14px; transition: var(--transition); color: var(--text-main); background: #f8fafc; box-shadow: inset 0 1px 2px rgba(0,0,0,0.02);}
+        .form-group input:focus, .form-group select:focus, .form-group textarea:focus { outline: none; border-color: var(--primary); background: #ffffff; box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.15); }
+        .form-group input[readonly] { background: var(--bg-body); color: var(--text-muted); cursor: not-allowed; box-shadow: none; border-color: var(--border-light);}
+        
+        .checkbox-group { display: flex; gap: 16px; padding: 4px 0; flex-wrap: wrap; }
+        .checkbox-group label { display: flex; align-items: center; gap: 8px; font-weight: 500; font-size: 14px; cursor: pointer; color: var(--text-main); }
+        .checkbox-group input { accent-color: var(--primary); width: 18px; height: 18px; cursor: pointer; border-radius: 4px; border: 1px solid var(--border-dark);}
+        
+        .modal-actions { display: flex; justify-content: flex-end; gap: 12px; border-top: 1px solid var(--border-light); padding-top: 24px; position: sticky; bottom: -32px; background: rgba(255,255,255,0.95); backdrop-filter: blur(8px); padding-bottom: 32px; z-index: 10; margin-bottom: -32px; }
+        .info-block { background: #f8fafc; padding: 24px; border-radius: var(--radius-md); font-size: 14px; line-height: 2; border: 1px solid var(--border-light); word-break: break-word;}
+        .info-block strong { display: inline-block; width: 140px; color: var(--text-secondary); font-weight: 600; flex-shrink: 0;}
+        .info-row { display: flex; gap: 8px; margin-bottom: 8px; align-items: flex-start;}
+        .btn-danger { color: #dc2626; background: #fef2f2; border-color: #fecaca; box-shadow: none;}
+        .btn-danger:hover { background: #fee2e2; border-color: #fca5a5; color: #b91c1c; box-shadow: none;}
+
+        .post-list-item { padding: 16px; border: 1px solid var(--border-light); border-radius: var(--radius-md); background: var(--bg-surface); cursor: pointer; transition: var(--transition); display: flex; flex-direction: column; gap: 8px; box-shadow: var(--shadow-sm); }
+        .post-list-item:hover { border-color: var(--primary); box-shadow: var(--shadow-md); transform: translateY(-2px); }
+
+        .idea-category-header { font-weight: 700; font-size: 13px; color: var(--primary); text-transform: uppercase; margin-top: 32px; padding-bottom: 8px; border-bottom: 2px solid var(--primary-light); letter-spacing: 0.05em;}
+        .idea-category-header:first-child { margin-top: 0; }
+        
+        .idea-actions-wrapper { display: flex; gap: 8px; opacity: 0.6; transition: var(--transition); }
+        .post-list-item:hover .idea-actions-wrapper { opacity: 1; }
+        .idea-actions-wrapper button { display: flex; align-items: center; justify-content: center; background: transparent; border: none; padding: 6px; border-radius: var(--radius-sm); cursor: pointer; transition: var(--transition); }
+        .idea-actions-wrapper button:hover { background: var(--border-light); }
+        .btn-edit-idea { color: var(--text-secondary); }
+        .btn-delete-idea { color: #dc2626; }
+        .btn-delete-idea:hover { background: #fee2e2 !important; }
+    </style>
+</head>
+<body>
+
+    <aside class="sidebar">
+        <div class="mini-cal" id="miniCalendar"></div>
+
+        <div class="filter-group">
+            <h3>Ресурсы</h3>
+            <button class="btn" style="width: 100%; justify-content: flex-start; gap: 10px; color: var(--primary); border-color: var(--primary-light); background: var(--primary-light); font-weight: 600;" onclick="openIdeaBank('ALL')">
+                💡 Весь банк идей
+            </button>
+        </div>
+
+        <div class="filter-group">
+            <h3>Организация</h3>
+            <label class="checkbox-item"><input type="checkbox" class="filter-org" value="КОС" checked onchange="refreshView()"> КОС</label>
+            <label class="checkbox-item"><input type="checkbox" class="filter-org" value="СРТ" checked onchange="refreshView()"> СРТ</label>
+            <label class="checkbox-item"><input type="checkbox" class="filter-org" value="СИ" checked onchange="refreshView()"> СИ</label>
+        </div>
+
+        <div class="filter-group">
+            <h3>Ответственный</h3>
+            <div id="assigneeFilters"></div>
+        </div>
+
+        <div class="filter-group">
+            <h3>Канал</h3>
+            <label class="checkbox-item"><input type="checkbox" class="filter-ch" value="КЛИК" checked onchange="refreshView()"> КЛИК</label>
+            <label class="checkbox-item"><input type="checkbox" class="filter-ch" value="Чат" checked onchange="refreshView()"> Чат</label>
+            <label class="checkbox-item"><input type="checkbox" class="filter-ch" value="Email" checked onchange="refreshView()"> Email</label>
+        </div>
+    </aside>
+
+    <main class="main-view">
+        <header>
+            <div class="nav-controls">
+                <button class="btn btn-primary" onclick="openAddModal()">+ Создать</button>
+                <div style="display: flex; gap: 8px; margin-left: 16px;">
+                    <button class="btn btn-icon" onclick="navigatePeriod(-1)">&#8592;</button>
+                    <button class="btn" onclick="goToToday()">Сегодня</button>
+                    <button class="btn btn-icon" onclick="navigatePeriod(1)">&#8594;</button>
+                </div>
+                <h2 id="currentPeriod">Месяц Год</h2>
+            </div>
+            <div class="view-switcher" id="viewBtns">
+                <button id="btnDay" onclick="changeView('day')">День</button>
+                <button id="btnWeek" onclick="changeView('week')">Неделя</button>
+                <button id="btnMonth" class="active" onclick="changeView('month')">Месяц</button>
+            </div>
+        </header>
+        <div class="grid-container" id="calendarContent"></div>
+    </main>
+
+    <section class="analytics-panel">
+        <div class="stat-card">
+            <div class="carousel-header">
+                <button onclick="changeChartOrg(-1)">&#8592;</button>
+                <div style="flex: 1;">
+                    <h4 id="chartOrgTitle">КОС</h4>
+                    <span>Только КЛИК</span>
+                </div>
+                <button onclick="changeChartOrg(1)">&#8594;</button>
+            </div>
+            <div class="chart-container" id="chartContainer">
+                <canvas id="donutChart"></canvas>
+            </div>
+            <div id="chartRecommendations" class="recommendation-box"></div>
+        </div>
+
+        <div class="stat-card" id="rubricsChecklistCard">
+            <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                <div>
+                    <h4>Чек-лист тем</h4>
+                    <span class="stat-subtitle" id="checklistSubtitle" style="margin-bottom: 0;">Покрытие за месяц</span>
+                </div>
+            </div>
+            <div id="rubricsChecklist" class="checklist-container"></div>
+        </div>
+
+        <div class="stat-card" id="balanceCard">
+            <h4>Баланс повестки</h4>
+            <span class="stat-subtitle">Бизнес / Социальная (Только КЛИК)</span>
+            <div id="orgBalancesContainer"></div>
+        </div>
+
+        <div class="stat-card">
+            <h4>Итоги месяца</h4>
+            <span class="stat-subtitle">Публикации (Только КЛИК)</span>
+            <div id="totalsContainer" style="display: flex; flex-direction: column; gap: 12px; margin-bottom: 20px;"></div>
+            <div style="font-size: 15px; display: flex; justify-content: space-between; border-top: 1px solid var(--border-light); padding-top: 16px;">
+                <span style="color: var(--text-secondary); font-weight: 500;">Уникальных постов:</span>
+                <strong id="totalCount" style="font-size: 20px; color: var(--primary);">0</strong>
+            </div>
+        </div>
+    </section>
+
+    <div class="modal-overlay" id="addModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="modalTitle">Новая публикация</h3>
+                <button class="close-btn" onclick="closeAddModal()">&times;</button>
+            </div>
+            <form id="pubForm" onsubmit="savePublication(event)">
+                <div class="form-group" style="margin-bottom: 16px;">
+                    <label>Тема публикации *</label>
+                    <input type="text" id="f_theme" placeholder="Введите емкий заголовок..." required>
+                </div>
+                
+                <div class="form-group" style="flex-direction: row; align-items: center; gap: 10px; margin-bottom: 16px; padding: 12px 16px; background: #fff1f2; border: 1px dashed #fecdd3; border-radius: var(--radius-sm);">
+                    <input type="checkbox" id="f_urgent" style="width: 18px; height: 18px; accent-color: #e11d48; cursor: pointer; box-shadow: none;">
+                    <label for="f_urgent" style="color: #e11d48; font-weight: 700; cursor: pointer; margin: 0;">🔥 Срочная публикация</label>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group"><label>Дата *</label><input type="date" id="f_date" required></div>
+                    <div class="form-group"><label>Время *</label><input type="time" id="f_time" value="10:00" required></div>
+                    <div class="form-group">
+                        <label>Статус *</label>
+                        <select id="f_status" required>
+                            <option value="Планируется">Планируется</option>
+                            <option value="Опубликовано">Опубликовано</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-row" style="margin-top: 16px;">
+                    <div class="form-group">
+                        <label>Ответственный *</label>
+                        <select id="f_assignee" required><option value="" disabled selected>Выберите ответственного...</option></select>
+                    </div>
+                </div>
+                <div class="form-row" style="margin-top: 16px;">
+                    <div class="form-group">
+                        <label>Каналы *</label>
+                        <div class="checkbox-group">
+                            <label><input type="checkbox" class="form-ch" value="КЛИК" checked> КЛИК</label>
+                            <label><input type="checkbox" class="form-ch" value="Чат"> Чат</label>
+                            <label><input type="checkbox" class="form-ch" value="Email"> Email</label>
+                        </div>
+                    </div>
+                </div>
+                <div class="form-row" style="margin-top: 8px;">
+                    <div class="form-group">
+                        <label>Организации *</label>
+                        <div class="checkbox-group">
+                            <label><input type="checkbox" class="form-org" value="КОС" checked> КОС</label>
+                            <label><input type="checkbox" class="form-org" value="СРТ"> СРТ</label>
+                            <label><input type="checkbox" class="form-org" value="СИ"> СИ</label>
+                        </div>
+                    </div>
+                </div>
+                <div class="form-row" style="margin-top: 16px;">
+                    <div class="form-group">
+                        <label>Рубрика *</label>
+                        <select id="f_rubric" onchange="updateType()" required><option value="" disabled selected>Выберите рубрику...</option></select>
+                    </div>
+                    <div class="form-group"><label>Тип повестки</label><input type="text" id="f_type" value="Бизнес" readonly></div>
+                </div>
+                <div class="modal-actions">
+                    <button type="button" class="btn" onclick="closeAddModal()">Отмена</button>
+                    <button type="submit" class="btn btn-primary">Сохранить</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="viewModal">
+        <div class="modal-content" style="width: 540px;">
+            <div class="modal-header">
+                <h3>Детали публикации</h3>
+                <button class="close-btn" onclick="closeViewModal()">&times;</button>
+            </div>
+            <div class="info-block" id="viewModalContent"></div>
+            <div class="modal-actions" style="justify-content: space-between;">
+                <button class="btn btn-danger" id="btnDelete">Удалить</button>
+                <div style="display: flex; gap: 12px;">
+                    <button class="btn" id="btnEdit">Редактировать</button>
+                    <button class="btn btn-primary" onclick="closeViewModal()">Закрыть</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="listModal" style="z-index: 1001;">
+        <div class="modal-content" style="width: 540px;">
+            <div class="modal-header">
+                <h3 id="listModalTitle">Публикации рубрики</h3>
+                <button class="close-btn" onclick="closeListModal()">&times;</button>
+            </div>
+            <div id="listModalContent" style="display: flex; flex-direction: column; gap: 12px; max-height: 400px; overflow-y: auto; padding-right: 8px;"></div>
+            <div class="modal-actions">
+                <button class="btn btn-primary" onclick="closeListModal()">Закрыть</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="ideaBankModal" style="z-index: 1002;">
+        <div class="modal-content" style="width: 600px;">
+            <div class="modal-header" style="border-bottom: none; padding-bottom: 0;">
+                <div>
+                    <h3 id="ideaBankTitle">Банк идей</h3>
+                    <span id="ideaBankSubtitle" style="font-size: 14px; color: var(--text-muted); font-weight: 500; margin-top: 4px; display: inline-block;">Кликните на идею, чтобы создать пост</span>
+                </div>
+                <button class="close-btn" onclick="closeIdeaBank()">&times;</button>
+            </div>
+            <div id="ideaBankContent" style="display: flex; flex-direction: column; gap: 12px; max-height: 450px; overflow-y: auto; padding-right: 8px; margin-top: 16px;">
+            </div>
+            <div id="addIdeaContainer" style="margin-top: 24px; padding-top: 24px; border-top: 1px solid var(--border-light);">
+            </div>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="shiftModal" style="z-index: 1005;">
+        <div class="modal-content" style="width: 500px; border-color: #fca5a5; box-shadow: 0 25px 50px -12px rgba(220, 38, 38, 0.25);">
+            <div class="modal-header" style="border-bottom-color: #fecaca;">
+                <h3 style="color: #dc2626;">⚠️ Перегруз постов</h3>
+                <button class="close-btn" onclick="closeShiftModal()">&times;</button>
+            </div>
+            <div id="shiftModalContent" style="font-size: 14px; line-height: 1.6; color: var(--text-main);">
+                </div>
+            <div class="modal-actions" style="justify-content: space-between; border-top-color: #fecaca;">
+                <button class="btn" style="color: var(--text-secondary);" onclick="forceSaveItem()">Оставить как есть</button>
+                <div style="display: flex; gap: 12px;">
+                    <button class="btn btn-primary" style="background: #ef4444; box-shadow: 0 2px 4px rgba(239, 68, 68, 0.3);" onclick="applyShiftAndSave()">Применить перенос</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ==========================================
+        // МЫ ВСТАВИЛИ СЮДА ТВОИ КЛЮЧИ!
+        // ==========================================
+        const supabaseUrl = 'https://skudluxdulcuacvaoydh.supabase.co'; 
+        const supabaseKey = 'sb_publishable_BEW-iuesrW4UMWjPfVHd5g_1jFdRL2v';
+        const supabase = window.supabase.createClient(supabaseUrl, supabaseKey);
+        // ==========================================
+
+        const team = ["Ляйсан Гарафиева", "Алия Муллакаева", "Алина Муллакаева", "Анастасия Флегантова", "Чулпан Валеева", "Ольга Садовникова", "Ксения Балянина"];
+        const rubricsMap = { 
+            "Безопасность": "Бизнес", "Забота о сотрудниках": "Социальная", "Изменения/Трансформации": "Бизнес", "Инвест.проекты": "Бизнес",
+            "Карьера и образование": "Социальная", "Клиенты/Продукция": "Бизнес", "Наука и инновации": "Бизнес", "Открытый СИБУР": "Бизнес",
+            "Праздники": "Социальная", "Развитие городов и социальная ответственность": "Социальная", "Семейные ценности": "Социальная", 
+            "Спорт и ЗОЖ": "Социальная", "Экология и устойчивое развитие": "Бизнес", "Эффективность процессов": "Бизнес", "Другое": "Бизнес"
+        };
+        const targetRubrics = ['Безопасность', 'Забота о сотрудниках', 'Открытый СИБУР', 'Эффективность процессов'];
+
+        let ideaBank = {};
+        let db = [];
+
+        async function loadDataFromCloud() {
+            const { data } = await supabase.from('app_state').select('*');
+            if (data) {
+                const postsData = data.find(d => d.key === 'posts');
+                const ideasData = data.find(d => d.key === 'ideas');
+                
+                if (postsData && postsData.value && postsData.value.length > 0) {
+                    db = postsData.value;
+                }
+                if (ideasData && ideasData.value && Object.keys(ideasData.value).length > 0) {
+                    ideaBank = ideasData.value;
+                }
+                refreshView();
+            }
+        }
+
+        async function saveToLocalStorage() { 
+            await supabase.from('app_state').update({ value: db }).eq('key', 'posts'); 
+        }
+        async function saveIdeaBank() { 
+            await supabase.from('app_state').update({ value: ideaBank }).eq('key', 'ideas'); 
+        }
+
+        supabase.channel('room-1')
+          .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'app_state' }, payload => {
+              if (payload.new.key === 'posts') db = payload.new.value;
+              if (payload.new.key === 'ideas') ideaBank = payload.new.value;
+              refreshView();
+          })
+          .subscribe();
+
+        const monthNames = ["Январь", "Февраль", "Март", "Апрель", "Май", "Июнь", "Июль", "Август", "Сентябрь", "Октябрь", "Ноябрь", "Декабрь"];
+        const chartOrgsList = ['КОС', 'СРТ', 'СИ'];
+        
+        let myChart = null;
+        let activeView = 'month';
+        let draggedEventId = null; 
+        let editingId = null; 
+        let currentChartOrgIdx = 0; 
+
+        const KLIK_DAILY_LIMIT = 5;
+        let pendingSaveItem = null;    
+        let pendingShiftCandidate = null; 
+        let pendingShiftDate = null;   
+
+        let todayDate = new Date(); 
+        let displayYear = todayDate.getFullYear();
+        let displayMonth = todayDate.getMonth(); 
+        let activeDateStr = formatDate(todayDate);
+
+        function formatDate(dateObj) { return `${dateObj.getFullYear()}-${String(dateObj.getMonth() + 1).padStart(2, '0')}-${String(dateObj.getDate()).padStart(2, '0')}`; }
+
+        function initForms() {
+            const container = document.getElementById('assigneeFilters');
+            const select = document.getElementById('f_assignee');
+            team.forEach(name => {
+                container.innerHTML += `<label class="checkbox-item"><input type="checkbox" class="filter-assignee" value="${name}" checked onchange="refreshView()"> ${name}</label>`;
+                select.innerHTML += `<option value="${name}">${name}</option>`;
+            });
+            const selectRubric = document.getElementById('f_rubric');
+            Object.entries(rubricsMap).forEach(([rubric, type]) => { selectRubric.innerHTML += `<option value="${rubric}">${rubric} (${type})</option>`; });
+        }
+
+        function getFilteredDB() {
+            const selectedOrgs = Array.from(document.querySelectorAll('.filter-org:checked')).map(c => c.value);
+            const selectedChs = Array.from(document.querySelectorAll('.filter-ch:checked')).map(c => c.value);
+            const selectedAssignees = Array.from(document.querySelectorAll('.filter-assignee:checked')).map(c => c.value);
+
+            return db.filter(ev => 
+                ev.orgs.some(org => selectedOrgs.includes(org)) && 
+                ev.channels.some(ch => selectedChs.includes(ch)) &&
+                selectedAssignees.includes(ev.assignee)
+            );
+        }
+
+        function refreshView() {
+            renderMiniCalendar();
+            if(activeView === 'month') renderMonth();
+            else if(activeView === 'day') renderDay(activeDateStr);
+            else if(activeView === 'week') renderWeek();
+            updateAnalytics();
+        }
+
+        function createCardElement(ev) {
+            const card = document.createElement('div');
+            const mainOrg = ev.orgs[0].toLowerCase(); 
+            const isPublished = ev.status === 'Опубликовано';
+            
+            card.className = `event-card org-${mainOrg} ${isPublished ? 'is-published' : 'is-planned'}`;
+            card.draggable = true; card.title = `Перетащите, чтобы изменить время/дату`;
+            card.ondragstart = (e) => { draggedEventId = ev.id; e.dataTransfer.effectAllowed = 'move'; setTimeout(() => e.target.style.opacity = '0.4', 0); };
+            card.ondragend = (e) => { e.target.style.opacity = ''; draggedEventId = null; document.querySelectorAll('.drag-over').forEach(el => el.classList.remove('drag-over')); };
+            
+            card.innerHTML = `
+                <div class="event-header">
+                    <div class="status-toggle" title="${isPublished ? 'Вернуть в план' : 'Отметить как опубликованное'}">${isPublished ? '✓' : ''}</div>
+                    <span class="event-title" title="${ev.theme}">${ev.theme}</span>
+                </div>
+                <div class="event-meta">${ev.time} • ${ev.assignee ? ev.assignee.split(' ')[0] : '—'}</div>
+            `;
+            
+            card.querySelector('.status-toggle').onclick = (e) => { 
+                e.stopPropagation(); 
+                ev.status = isPublished ? 'Планируется' : 'Опубликовано'; 
+                saveToLocalStorage(); 
+                refreshView(); 
+            };
+            card.onclick = (e) => { e.stopPropagation(); openEventInfo(ev.id); };
+            return card;
+        }
+
+        function navigatePeriod(step) {
+            if (activeView === 'month') {
+                displayMonth += step;
+                if(displayMonth < 0) { displayMonth = 11; displayYear--; }
+                if(displayMonth > 11) { displayMonth = 0; displayYear++; }
+            } else {
+                const parts = activeDateStr.split('-');
+                const d = new Date(parts[0], parts[1] - 1, parts[2]);
+                if (activeView === 'week') d.setDate(d.getDate() + (step * 7)); else d.setDate(d.getDate() + step); 
+                activeDateStr = formatDate(d); displayMonth = d.getMonth(); displayYear = d.getFullYear();
+            }
+            refreshView();
+        }
+
+        function goToToday() { displayYear = todayDate.getFullYear(); displayMonth = todayDate.getMonth(); activeDateStr = formatDate(todayDate); changeView('month'); }
+
+        function changeView(view, dateStr = null) {
+            activeView = view;
+            if (dateStr) { activeDateStr = dateStr; const p = dateStr.split('-'); displayYear = parseInt(p[0]); displayMonth = parseInt(p[1]) - 1; }
+            document.querySelectorAll('#viewBtns button').forEach(b => b.classList.remove('active'));
+            document.getElementById('btn' + view.charAt(0).toUpperCase() + view.slice(1)).classList.add('active');
+            refreshView();
+        }
+
+        function renderMonth() {
+            const container = document.getElementById('calendarContent');
+            container.innerHTML = `<div class="month-view-wrapper"><div class="month-days-header"><div>Пн</div><div>Вт</div><div>Ср</div><div>Чт</div><div>Пт</div><div>Сб</div><div>Вс</div></div><div class="month-grid" id="monthGrid"></div></div>`;
+            const grid = document.getElementById('monthGrid');
+            const data = getFilteredDB();
+            document.getElementById('currentPeriod').innerText = `${monthNames[displayMonth]} ${displayYear}`;
+
+            let firstDay = new Date(displayYear, displayMonth, 1).getDay() || 7;
+            const daysInMonth = new Date(displayYear, displayMonth + 1, 0).getDate();
+            const daysInPrevMonth = new Date(displayYear, displayMonth, 0).getDate();
+            const totalCells = Math.ceil((firstDay - 1 + daysInMonth) / 7) * 7;
+            const todayReset = new Date(todayDate.getFullYear(), todayDate.getMonth(), todayDate.getDate());
+
+            for(let i = 1; i <= totalCells; i++) {
+                let cellDay, cellMonth = displayMonth, cellYear = displayYear, isCurrent = true;
+                if (i < firstDay) { isCurrent = false; cellDay = daysInPrevMonth - (firstDay - i) + 1; cellMonth--; } 
+                else if (i < firstDay + daysInMonth) { cellDay = i - firstDay + 1; } 
+                else { isCurrent = false; cellDay = i - (firstDay + daysInMonth) + 1; cellMonth++; }
+                if (cellMonth < 0) { cellMonth = 11; cellYear--; }
+                if (cellMonth > 11) { cellMonth = 0; cellYear++; }
+
+                const cellDateStr = `${cellYear}-${String(cellMonth + 1).padStart(2,'0')}-${String(cellDay).padStart(2,'0')}`;
+                const cell = document.createElement('div');
+                cell.className = `grid-cell ${!isCurrent ? 'other-month' : ''} ${cellDateStr === formatDate(todayDate) ? 'today' : ''} ${new Date(cellYear, cellMonth, cellDay) < todayReset ? 'past-day' : ''}`;
+                cell.innerHTML = `<span class="day-num">${cellDay}</span>`;
+                cell.onclick = () => changeView('day', cellDateStr);
+                
+                cell.ondragover = (e) => { e.preventDefault(); cell.classList.add('drag-over'); };
+                cell.ondragleave = (e) => cell.classList.remove('drag-over');
+                cell.ondrop = (e) => { e.preventDefault(); cell.classList.remove('drag-over'); if(!draggedEventId) return; const ev = db.find(x => x.id === draggedEventId); if(ev) { ev.date = cellDateStr; saveToLocalStorage(); refreshView(); } };
+                
+                const wrapper = document.createElement('div');
+                wrapper.className = 'cell-events-wrapper';
+                wrapper.style.cssText = "flex: 1; display: flex; flex-direction: column; overflow-y: auto; padding-right: 2px;";
+                data.filter(e => e.date === cellDateStr).sort((a,b) => a.time.localeCompare(b.time)).forEach(ev => wrapper.appendChild(createCardElement(ev)));
+                cell.appendChild(wrapper); grid.appendChild(cell);
+            }
+        }
+
+        function renderDay(dateStr) {
+            const container = document.getElementById('calendarContent');
+            container.innerHTML = '<div class="scrollable-view" id="dayView"></div>';
+            const dayView = document.getElementById('dayView');
+            const data = getFilteredDB().filter(e => e.date === dateStr);
+            const dParts = dateStr.split('-');
+            document.getElementById('currentPeriod').innerText = `${parseInt(dParts[2])} ${monthNames[parseInt(dParts[1])-1]} ${dParts[0]}`;
+
+            for(let h = 8; h <= 20; h++) {
+                const hourStr = String(h).padStart(2,'0') + ":00";
+                const row = document.createElement('div'); row.className = 'hour-row';
+                row.innerHTML = `<div class="time-col">${hourStr}</div>`;
+                const cCol = document.createElement('div'); cCol.className = 'content-col';
+                cCol.ondragover = (e) => { e.preventDefault(); cCol.classList.add('drag-over'); };
+                cCol.ondragleave = (e) => cCol.classList.remove('drag-over');
+                cCol.ondrop = (e) => { e.preventDefault(); cCol.classList.remove('drag-over'); if(!draggedEventId) return; const ev = db.find(x => x.id === draggedEventId); if(ev) { ev.date = dateStr; ev.time = hourStr; saveToLocalStorage(); refreshView(); } };
+                data.filter(e => e.time.startsWith(String(h).padStart(2,'0'))).forEach(ev => cCol.appendChild(createCardElement(ev)));
+                row.appendChild(cCol); dayView.appendChild(row);
+            }
+        }
+
+        function renderWeek() {
+            const container = document.getElementById('calendarContent');
+            container.innerHTML = '<div class="scrollable-view"><div class="week-view" id="weekView"></div></div>';
+            const weekView = document.getElementById('weekView');
+            const parts = activeDateStr.split('-');
+            const activeDateObj = new Date(parts[0], parts[1] - 1, parts[2]);
+            let dow = activeDateObj.getDay() || 7;
+            const start = new Date(activeDateObj); start.setDate(activeDateObj.getDate() - dow + 1);
+            document.getElementById('currentPeriod').innerText = `Неделя ${start.getDate()} ${monthNames[start.getMonth()]}`;
+
+            const header = document.createElement('div'); header.className = 'week-header-row';
+            header.innerHTML = '<div class="week-time-header"></div>';
+            const days = [];
+            for(let i=0; i<7; i++) {
+                const d = new Date(start); d.setDate(start.getDate() + i); const dStr = formatDate(d); days.push(dStr);
+                header.innerHTML += `<div class="week-header-cell ${dStr === formatDate(todayDate) ? 'today' : ''}" onclick="changeView('day', '${dStr}')">${['Пн','Вт','Ср','Чт','Пт','Сб','Вс'][i]}, ${d.getDate()}</div>`;
+            }
+            weekView.appendChild(header);
+
+            for(let h=8; h<=20; h++) {
+                const row = document.createElement('div'); row.className = 'week-hour-row';
+                const hourStr = String(h).padStart(2,'0') + ":00";
+                row.innerHTML = `<div class="time-col">${hourStr}</div>`;
+                for(let i=0; i<7; i++) {
+                    const cell = document.createElement('div'); cell.className = 'week-day-cell'; const cellDate = days[i];
+                    cell.ondragover = (e) => { e.preventDefault(); cell.classList.add('drag-over'); };
+                    cell.ondragleave = (e) => cell.classList.remove('drag-over');
+                    cell.ondrop = (e) => { e.preventDefault(); cell.classList.remove('drag-over'); if(!draggedEventId) return; const ev = db.find(x => x.id === draggedEventId); if(ev) { ev.date = cellDate; ev.time = hourStr; saveToLocalStorage(); refreshView(); } };
+                    getFilteredDB().filter(e => e.date === cellDate && e.time.startsWith(String(h).padStart(2,'0'))).forEach(ev => cell.appendChild(createCardElement(ev)));
+                    row.appendChild(cell);
+                }
+                weekView.appendChild(row);
+            }
+        }
+
+        function renderMiniCalendar() {
+            const container = document.getElementById('miniCalendar');
+            let firstDay = new Date(displayYear, displayMonth, 1).getDay() || 7;
+            let html = `<div class="mini-cal-header"><button onclick="navigatePeriod(-1)">&#8249;</button><span>${monthNames[displayMonth]} ${displayYear}</span><button onclick="navigatePeriod(1)">&#8250;</button></div><div style="display:grid; grid-template-columns: repeat(7,1fr); gap:4px; font-size:12px; color: var(--text-muted); font-weight: 500; margin-bottom: 8px;">`;
+            ['Пн','Вт','Ср','Чт','Пт','Сб','Вс'].forEach(d => html += `<span style="text-align:center;">${d}</span>`); html += `</div><div style="display:grid; grid-template-columns: repeat(7,1fr); gap:4px; font-size:13px;">`;
+            for(let i = 1; i < firstDay; i++) html += `<div></div>`;
+            for(let d = 1; d <= new Date(displayYear, displayMonth + 1, 0).getDate(); d++) {
+                const dStr = `${displayYear}-${String(displayMonth + 1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+                html += `<div class="mini-day ${dStr === activeDateStr ? 'active' : ''}" onclick="changeView('day', '${dStr}')">${d}</div>`;
+            }
+            container.innerHTML = html + `</div>`;
+        }
+
+        function changeChartOrg(step) {
+            const chartContainer = document.getElementById('chartContainer');
+            chartContainer.classList.add('fade');
+            setTimeout(() => { currentChartOrgIdx = (currentChartOrgIdx + step + chartOrgsList.length) % chartOrgsList.length; updateAnalytics(); chartContainer.classList.remove('fade'); }, 200);
+        }
+
+        function initChart() {
+            const ctx = document.getElementById('donutChart').getContext('2d');
+            const palette = ['#4f46e5', '#10b981', '#f59e0b', '#8b5cf6', '#0ea5e9', '#ec4899', '#14b8a6', '#ef4444', '#84cc16', '#a855f7'];
+            myChart = new Chart(ctx, { type: 'doughnut', data: { labels: [], datasets: [{ data: [], backgroundColor: palette, borderWidth: 0, hoverOffset: 4 }] }, options: { cutout: '68%', maintainAspectRatio: false, plugins: { legend: { position: 'right', labels: { usePointStyle: true, padding: 14, boxWidth: 8, font: { size: 11, family: 'Inter, sans-serif' } } }, tooltip: { backgroundColor: 'rgba(15, 23, 42, 0.9)', padding: 12, callbacks: { label: function(ctx) { let val = ctx.raw || 0; let total = ctx.chart._metasets[ctx.datasetIndex].total; return ` ${ctx.label}: ${val} шт. (${total > 0 ? Math.round((val / total) * 100) : 0}%)`; } } } } } });
+        }
+
+        function updateAnalytics() {
+            const targetOrg = chartOrgsList[currentChartOrgIdx];
+            document.getElementById('chartOrgTitle').innerText = targetOrg;
+            document.getElementById('checklistSubtitle').innerHTML = `Покрытие: <strong style="color:var(--primary);">${targetOrg}</strong> (Только КЛИК)`;
+
+            const klikMonthData = getFilteredDB().filter(e => { const p = e.date.split('-'); return parseInt(p[0]) === displayYear && (parseInt(p[1])-1) === displayMonth && e.channels.includes('КЛИК'); });
+
+            let totalsHtml = '';
+            chartOrgsList.forEach(org => { const orgCount = klikMonthData.filter(e => e.orgs.includes(org)).length; totalsHtml += `<div style="display: flex; justify-content: space-between; font-size: 14px; color: var(--text-main);"><span style="font-weight: 500;">${org}</span><strong>${orgCount} шт.</strong></div>`; });
+            document.getElementById('totalsContainer').innerHTML = totalsHtml;
+            document.getElementById('totalCount').innerText = klikMonthData.length;
+
+            let balHtml = '';
+            chartOrgsList.forEach(org => {
+                const oData = klikMonthData.filter(e => e.orgs.includes(org)); const total = oData.length;
+                const busPerc = total ? Math.round((oData.filter(e => e.type === 'Бизнес').length / total) * 100) : 50;
+                balHtml += `<div style="margin-bottom:16px;"><div class="balance-labels"><span>${org} <span style="color:var(--text-muted);font-weight:400;">(${total})</span></span><span>${busPerc}% / ${100-busPerc}%</span></div><div class="balance-bar"><div class="bar-bus" style="width:${busPerc}%"></div><div class="bar-soc" style="width:${100-busPerc}%"></div></div></div>`;
+            });
+            document.getElementById('orgBalancesContainer').innerHTML = balHtml;
+            
+            const chartData = klikMonthData.filter(e => e.orgs.includes(targetOrg));
+            const rubricCounts = {}; chartData.forEach(e => { const r = e.rubric || 'Не указана'; rubricCounts[r] = (rubricCounts[r] || 0) + 1; });
+
+            const allRubrics = Object.keys(rubricsMap);
+            let checklistHtml = '';
+            
+            allRubrics.filter(r => rubricCounts[r] > 0).forEach(rubric => {
+                const ideaBtnHtml = `<button onclick="event.stopPropagation(); openIdeaBank('${rubric}')" title="Банк идей" style="background:none; border:none; cursor:pointer; padding:4px 10px; background:var(--primary-light); border-radius:6px; font-size:11px; transition:0.2s; color: var(--primary); font-weight: 600;">💡 Банк идей</button>`;
+                
+                checklistHtml += `
+                    <div class="checklist-item present" onclick="openListModal('${rubric}', '${targetOrg}')" title="Нажмите, чтобы посмотреть посты">
+                        <div class="checklist-header">
+                            <span class="checklist-rubric-name">${rubric}</span>
+                            <div class="checklist-badges">
+                                <span class="checklist-count">${rubricCounts[rubric]} шт.</span>
+                            </div>
+                        </div>
+                        <div style="display:flex; justify-content:space-between; align-items: center; margin-top: 2px;">
+                            <div class="progress-track" style="flex:1; margin-right: 12px;"><div class="progress-fill" style="width: 100%;"></div></div>
+                            ${ideaBtnHtml}
+                        </div>
+                    </div>`;
+            });
+            
+            allRubrics.filter(r => !rubricCounts[r]).forEach(rubric => {
+                const ideaBtnHtml = `<button onclick="openIdeaBank('${rubric}')" title="Выбрать идею из банка" style="background:none; border:none; cursor:pointer; padding:4px 10px; background:var(--primary-light); border-radius:6px; font-size:11px; transition:0.2s; color: var(--primary); font-weight: 600;">💡 Банк идей</button>`;
+                
+                checklistHtml += `
+                    <div class="checklist-item missing">
+                        <div class="checklist-header">
+                            <span class="checklist-rubric-name">${rubric}</span>
+                            <div class="checklist-badges">
+                                <span class="checklist-count">0 шт.</span>
+                            </div>
+                        </div>
+                        <div style="display:flex; justify-content:space-between; align-items: center; margin-top: 2px;">
+                             <div class="progress-track" style="flex:1; margin-right: 12px;"><div class="progress-fill" style="width: 0%; background: transparent;"></div></div>
+                            ${ideaBtnHtml}
+                        </div>
+                    </div>`;
+            });
+            document.getElementById('rubricsChecklist').innerHTML = checklistHtml;
+
+            if(myChart) {
+                const labels = Object.keys(rubricCounts); myChart.data.labels = labels; myChart.data.datasets[0].data = Object.values(rubricCounts); myChart.update();
+                const recBlock = document.getElementById('chartRecommendations');
+                if (chartData.length === 0) { recBlock.innerHTML = `<strong>💡 Подсказка:</strong> На этот месяц пока нет публикаций для КЛИК в ${targetOrg}.`; } 
+                else { const missingTargetRubrics = targetRubrics.filter(r => !labels.includes(r)); recBlock.innerHTML = missingTargetRubrics.length > 0 ? `<strong>💡 Зона роста:</strong> Для идеального распределения добавьте контент в: <span style="font-weight:500;">${missingTargetRubrics.join(', ')}</span>.` : `<strong>🏆 Отличная работа!</strong> Идеальное распределение базовых рубрик достигнуто.`; }
+            }
+        }
+
+        function openAddModal() { 
+            editingId = null; 
+            document.getElementById('pubForm').reset(); 
+            document.getElementById('modalTitle').innerText = 'Новая публикация'; 
+            document.getElementById('f_date').value = activeDateStr; 
+            document.getElementById('f_time').value = '10:00';
+            document.getElementById('f_status').value = 'Планируется';
+            document.getElementById('f_assignee').value = ''; 
+            document.getElementById('f_rubric').value = ''; 
+            document.getElementById('f_type').value = 'Бизнес';
+            document.getElementById('f_urgent').checked = false;
+            document.getElementById('addModal').style.display = 'flex'; 
+        }
+        
+        function closeAddModal() { document.getElementById('addModal').style.display = 'none'; }
+        function updateType() { document.getElementById('f_type').value = rubricsMap[document.getElementById('f_rubric').value] || "Бизнес"; }
+
+        function savePublication(e) {
+            e.preventDefault();
+            
+            const item = { 
+                id: editingId || Date.now(), 
+                theme: document.getElementById('f_theme').value, 
+                date: document.getElementById('f_date').value, 
+                time: document.getElementById('f_time').value, 
+                status: document.getElementById('f_status').value, 
+                assignee: document.getElementById('f_assignee').value, 
+                rubric: document.getElementById('f_rubric').value, 
+                type: document.getElementById('f_type').value, 
+                channels: Array.from(document.querySelectorAll('.form-ch:checked')).map(c => c.value), 
+                orgs: Array.from(document.querySelectorAll('.form-org:checked')).map(c => c.value) 
+            };
+            
+            const isUrgent = document.getElementById('f_urgent').checked;
+
+            if(!item.channels.length || !item.orgs.length) return alert("Выберите хотя бы один канал и организацию");
+
+            if (item.channels.includes('КЛИК')) {
+                const timeCollision = db.find(p => 
+                    p.date === item.date && 
+                    p.time === item.time && 
+                    p.channels.includes('КЛИК') && 
+                    p.id !== item.id &&
+                    p.orgs.some(org => item.orgs.includes(org))
+                );
+
+                if (timeCollision) {
+                    alert(`В ${item.time} для одной из выбранных организаций уже запланирован пост в КЛИК («${timeCollision.theme}»). Пожалуйста, выберите другое время.`);
+                    return;
+                }
+
+                const dayKlikPosts = db.filter(p => p.date === item.date && p.channels.includes('КЛИК') && p.id !== item.id);
+
+                if (dayKlikPosts.length >= KLIK_DAILY_LIMIT) {
+                    if (isUrgent) {
+                        let candidate = dayKlikPosts.find(p => p.status === 'Планируется' && p.type === item.type); 
+                        if (!candidate) candidate = dayKlikPosts.find(p => p.status === 'Планируется'); 
+
+                        if (candidate) {
+                            let parts = item.date.split('-');
+                            let nextDate = new Date(parts[0], parts[1] - 1, parts[2]);
+                            let foundDate = null;
+                            
+                            for (let i = 1; i <= 14; i++) {
+                                nextDate.setDate(nextDate.getDate() + 1);
+                                const nextDateStr = formatDate(nextDate);
+                                const nextDayPosts = db.filter(p => p.date === nextDateStr && p.channels.includes('КЛИК'));
+                                
+                                if (nextDayPosts.length < KLIK_DAILY_LIMIT) {
+                                    foundDate = nextDateStr;
+                                    break;
+                                }
+                            }
+
+                            if (foundDate) {
+                                showSmartShiftModal(item, candidate, foundDate);
+                                return; 
+                            }
+                        }
+                    } else {
+                        if(!confirm(`⚠️ На ${item.date} уже запланировано ${KLIK_DAILY_LIMIT} постов в КЛИК. Вы уверены, что хотите добавить еще один?`)) {
+                            return;
+                        }
+                    }
+                }
+            }
+            finalizeSave(item);
+        }
+
+        function showSmartShiftModal(newItem, candidate, newDate) {
+            pendingSaveItem = newItem;
+            pendingShiftCandidate = candidate;
+            pendingShiftDate = newDate;
+
+            const modal = document.getElementById('shiftModal');
+            const content = document.getElementById('shiftModalContent');
+            
+            const parts = newDate.split('-');
+            const formattedDate = `${parts[2]} ${monthNames[parseInt(parts[1])-1].toLowerCase()}`;
+
+            content.innerHTML = `
+                <p>Вы добавляете <strong>срочный пост</strong> на день, где уже достигнут лимит (${KLIK_DAILY_LIMIT} постов в КЛИКе).</p>
+                <p>Чтобы сохранить баланс повестки и не спамить коллег, мы нашли свободный слот.</p>
+                <div style="background: #f8fafc; padding: 16px; border-radius: var(--radius-sm); border: 1px solid var(--border-light); margin-top: 16px;">
+                    <strong style="color: var(--text-secondary);">Предлагаем перенести плановый пост:</strong><br>
+                    <span style="font-weight: 600; color: var(--text-main); font-size: 15px;">«${candidate.theme}»</span><br>
+                    <span style="color: var(--primary); font-weight: 600; display: inline-block; margin-top: 8px;">На ${formattedDate} в ${candidate.time}</span>
+                </div>
+            `;
+            modal.style.display = 'flex';
+        }
+
+        function applyShiftAndSave() {
+            pendingShiftCandidate.date = pendingShiftDate;
+            db = db.map(x => x.id === pendingShiftCandidate.id ? pendingShiftCandidate : x);
+            finalizeSave(pendingSaveItem);
+            closeShiftModal();
+        }
+
+        function forceSaveItem() { finalizeSave(pendingSaveItem); closeShiftModal(); }
+
+        function finalizeSave(item) {
+            if(editingId) db = db.map(x => x.id === editingId ? item : x); 
+            else db.push(item);
+            
+            document.getElementById('f_urgent').checked = false;
+            saveToLocalStorage(); 
+            closeAddModal(); 
+            refreshView();
+        }
+
+        function closeShiftModal() { 
+            document.getElementById('shiftModal').style.display = 'none'; 
+            pendingSaveItem = null; pendingShiftCandidate = null;
+        }
+
+        function openEventInfo(id) {
+            const ev = db.find(x => x.id === id); const content = document.getElementById('viewModalContent');
+            content.innerHTML = `<div class="info-row"><strong>Тема:</strong> <span style="color:var(--text-main); font-weight:600;">${ev.theme}</span></div><div class="info-row"><strong>Ответственный:</strong> <span>${ev.assignee || 'Не указан'}</span></div><div class="info-row"><strong>Статус:</strong> <span style="color:${ev.status === 'Опубликовано' ? '#166534' : '#854d0e'}; font-weight:600;">${ev.status}</span></div><div class="info-row"><strong>Рубрика:</strong> <span>${ev.rubric || 'Не указана'} (${ev.type})</span></div><div class="info-row"><strong>Дата:</strong> <span>${ev.date} в ${ev.time}</span></div><div class="info-row"><strong>Организации:</strong> <span>${ev.orgs.join(', ')}</span></div><div class="info-row"><strong>Каналы:</strong> <span>${ev.channels.join(', ')}</span></div>`;
+            document.getElementById('btnDelete').onclick = () => { if(confirm("Удалить публикацию?")) { db = db.filter(x => x.id !== id); saveToLocalStorage(); closeViewModal(); refreshView(); } };
+            document.getElementById('btnEdit').onclick = () => {
+                editingId = id; closeViewModal(); document.getElementById('f_theme').value = ev.theme; document.getElementById('f_date').value = ev.date; document.getElementById('f_time').value = ev.time; document.getElementById('f_status').value = ev.status; document.getElementById('f_assignee').value = ev.assignee; document.getElementById('f_rubric').value = ev.rubric; updateType();
+                document.querySelectorAll('.form-ch').forEach(c => c.checked = ev.channels.includes(c.value)); document.querySelectorAll('.form-org').forEach(c => c.checked = ev.orgs.includes(c.value));
+                document.getElementById('addModal').style.display = 'flex';
+            };
+            document.getElementById('viewModal').style.display = 'flex';
+        }
+        function closeViewModal() { document.getElementById('viewModal').style.display = 'none'; }
+
+        function openListModal(rubric, org) {
+            const listData = getFilteredDB().filter(e => { const p = e.date.split('-'); return parseInt(p[0]) === displayYear && (parseInt(p[1])-1) === displayMonth && e.channels.includes('КЛИК') && e.orgs.includes(org) && e.rubric === rubric; });
+            document.getElementById('listModalTitle').innerHTML = `${rubric} <span style="font-size:14px; font-weight: 500; color:var(--text-muted);">(${org})</span>`;
+            const content = document.getElementById('listModalContent'); content.innerHTML = '';
+            listData.sort((a,b) => a.date.localeCompare(b.date) || a.time.localeCompare(b.time)).forEach(ev => {
+                const pParts = ev.date.split('-'); const formattedDate = `${pParts[2]} ${monthNames[parseInt(pParts[1])-1].slice(0,3).toLowerCase()}`;
+                const item = document.createElement('div'); item.className = 'post-list-item';
+                item.innerHTML = `<div style="font-weight: 600; font-size: 14px; color: var(--text-main);">${ev.theme}</div><div style="font-size: 12px; color: var(--text-secondary); display: flex; justify-content: space-between; margin-top: 4px;"><span>📅 ${formattedDate} в ${ev.time}</span><span>👤 ${ev.assignee ? ev.assignee.split(' ')[0] : '—'}</span></div>`;
+                item.onclick = () => { closeListModal(); openEventInfo(ev.id); }; content.appendChild(item);
+            });
+            document.getElementById('listModal').style.display = 'flex';
+        }
+        function closeListModal() { document.getElementById('listModal').style.display = 'none'; }
+
+        function openIdeaBank(rubric) {
+            const content = document.getElementById('ideaBankContent');
+            const title = document.getElementById('ideaBankTitle');
+            const subtitle = document.getElementById('ideaBankSubtitle');
+            const addFormContainer = document.getElementById('addIdeaContainer');
+            content.innerHTML = '';
+            
+            let formHtml = '';
+            
+            if (rubric === 'ALL') {
+                title.innerText = "Весь банк идей";
+                subtitle.innerText = "Общий список всех тем. Выберите рубрику для добавления в план.";
+                
+                Object.keys(ideaBank).forEach(cat => {
+                    const ideas = ideaBank[cat];
+                    if(ideas && ideas.length > 0) {
+                        const h = document.createElement('div');
+                        h.className = 'idea-category-header';
+                        h.innerText = cat;
+                        content.appendChild(h);
+                        renderIdeaList(ideas, cat, content);
+                    }
+                });
+
+                let options = '';
+                Object.keys(rubricsMap).forEach(r => { options += `<option value="${r}">${r}</option>`; });
+                
+                formHtml = `
+                <form onsubmit="handleAddNewIdea(event, 'ALL')" style="display: flex; gap: 12px;">
+                    <select id="newIdeaRubricSelect" required style="width: 200px; padding: 10px 14px; border: 1px solid var(--border-dark); border-radius: var(--radius-sm); font-size: 13px;">
+                        <option value="" disabled selected>Выберите рубрику...</option>
+                        ${options}
+                    </select>
+                    <input type="text" id="newIdeaText" placeholder="Новая идея..." required style="flex: 1; padding: 10px 14px; border: 1px solid var(--border-dark); border-radius: var(--radius-sm); font-size: 13px;">
+                    <button type="submit" class="btn btn-primary">Добавить</button>
+                </form>`;
+                
+            } else {
+                title.innerText = `Идеи: ${rubric}`;
+                subtitle.innerText = "Кликните на идею, чтобы создать пост";
+                
+                renderIdeaList(ideaBank[rubric] || [], rubric, content);
+
+                formHtml = `
+                <form onsubmit="handleAddNewIdea(event, '${rubric}')" style="display: flex; gap: 12px;">
+                    <input type="text" id="newIdeaText" placeholder="Добавить новую идею в рубрику..." required style="flex: 1; padding: 10px 14px; border: 1px solid var(--border-dark); border-radius: var(--radius-sm); font-size: 13px;">
+                    <button type="submit" class="btn btn-primary">Добавить</button>
+                </form>`;
+            }
+            
+            addFormContainer.innerHTML = formHtml;
+            document.getElementById('ideaBankModal').style.display = 'flex';
+        }
+
+        function renderIdeaList(ideas, rubric, container) {
+            if (!ideas || ideas.length === 0) {
+                container.innerHTML += `<div style="font-size:13px; color:var(--text-muted); padding:16px; background: #f8fafc; border-radius: var(--radius-sm); border: 1px dashed var(--border-dark); text-align: center;">Пока нет идей. Добавьте первую!</div>`;
+                return;
+            }
+            ideas.forEach((idea, index) => {
+                const item = document.createElement('div');
+                item.className = 'post-list-item'; 
+                item.style.flexDirection = "row";
+                item.style.alignItems = "center";
+                item.style.justifyContent = "space-between";
+                item.style.borderLeft = "4px solid var(--primary)"; 
+                
+                const leftSide = document.createElement('div');
+                leftSide.style.flex = "1";
+                leftSide.style.cursor = "pointer";
+                leftSide.innerHTML = `
+                    <div style="font-weight: 600; font-size: 14px; color: var(--text-main); line-height: 1.4; word-break: break-word;">${idea}</div>
+                    <div style="font-size: 12px; color: var(--primary); margin-top: 4px; font-weight: 600;">+ Создать пост</div>
+                `;
+                
+                leftSide.onclick = () => {
+                    closeIdeaBank(); openAddModal();
+                    document.getElementById('f_theme').value = idea;
+                    document.getElementById('f_rubric').value = rubric;
+                    updateType(); 
+                    const themeInput = document.getElementById('f_theme');
+                    themeInput.style.boxShadow = "0 0 0 3px rgba(79, 70, 229, 0.3)";
+                    setTimeout(() => themeInput.style.boxShadow = "inset 0 1px 2px rgba(0,0,0,0.02)", 1000);
+                };
+                
+                const actions = document.createElement('div');
+                actions.className = 'idea-actions-wrapper';
+                
+                const editBtn = document.createElement('button');
+                editBtn.className = 'btn-edit-idea';
+                editBtn.innerHTML = '✎';
+                editBtn.title = 'Редактировать';
+                editBtn.onclick = (e) => { e.stopPropagation(); inlineEditIdea(rubric, index, item, idea); };
+                
+                const delBtn = document.createElement('button');
+                delBtn.className = 'btn-delete-idea';
+                delBtn.innerHTML = '🗑';
+                delBtn.title = 'Удалить';
+                delBtn.onclick = (e) => {
+                    e.stopPropagation();
+                    if(confirm("Удалить идею из банка?")) {
+                        ideaBank[rubric].splice(index, 1);
+                        saveIdeaBank();
+                        openIdeaBank(document.getElementById('ideaBankTitle').innerText.includes("Весь") ? 'ALL' : rubric);
+                    }
+                };
+
+                actions.appendChild(editBtn);
+                actions.appendChild(delBtn);
+                
+                item.appendChild(leftSide);
+                item.appendChild(actions);
+                container.appendChild(item);
+            });
+        }
+
+        function inlineEditIdea(rubric, index, itemContainer, currentText) {
+            itemContainer.innerHTML = '';
+            itemContainer.style.flexDirection = 'column';
+            itemContainer.style.alignItems = 'stretch';
+            itemContainer.style.gap = '12px';
+
+            const input = document.createElement('textarea');
+            input.value = currentText;
+            input.style.width = '100%';
+            input.style.padding = '10px 14px';
+            input.style.borderRadius = 'var(--radius-sm)';
+            input.style.border = '1px solid var(--primary)';
+            input.style.fontFamily = 'inherit';
+            input.style.fontSize = '13px';
+            input.style.resize = 'vertical';
+            input.style.minHeight = '60px';
+
+            const actions = document.createElement('div');
+            actions.style.display = 'flex';
+            actions.style.gap = '8px';
+            actions.style.justifyContent = 'flex-end';
+
+            const cancelBtn = document.createElement('button');
+            cancelBtn.className = 'btn';
+            cancelBtn.innerText = 'Отмена';
+            cancelBtn.onclick = () => openIdeaBank(document.getElementById('ideaBankTitle').innerText.includes("Весь") ? 'ALL' : rubric);
+
+            const saveBtn = document.createElement('button');
+            saveBtn.className = 'btn btn-primary';
+            saveBtn.innerText = 'Сохранить';
+            saveBtn.onclick = () => {
+                const newText = input.value.trim();
+                if(newText) {
+                    ideaBank[rubric][index] = newText;
+                    saveIdeaBank();
+                    openIdeaBank(document.getElementById('ideaBankTitle').innerText.includes("Весь") ? 'ALL' : rubric);
+                }
+            };
+
+            actions.appendChild(cancelBtn);
+            actions.appendChild(saveBtn);
+            itemContainer.appendChild(input);
+            itemContainer.appendChild(actions);
+            input.focus();
+        }
+
+        function handleAddNewIdea(e, targetMode) {
+            e.preventDefault();
+            const textInput = document.getElementById('newIdeaText');
+            const text = textInput.value.trim();
+            
+            let rubric = targetMode;
+            if (targetMode === 'ALL') {
+                const select = document.getElementById('newIdeaRubricSelect');
+                rubric = select.value;
+                if (!rubric) return alert('Пожалуйста, выберите рубрику');
+            }
+            
+            if(text === "") return;
+
+            if (!ideaBank[rubric]) ideaBank[rubric] = [];
+            ideaBank[rubric].push(text);
+            
+            saveIdeaBank();
+            openIdeaBank(targetMode); 
+        }
+
+        function closeIdeaBank() { document.getElementById('ideaBankModal').style.display = 'none'; }
+
+        window.onload = () => { 
+            initForms(); 
+            initChart(); 
+            loadDataFromCloud(); 
+            changeView('month'); 
+        };
+        
+        window.onclick = (e) => { 
+            if(e.target.classList.contains('modal-overlay')) { 
+                closeAddModal(); closeViewModal(); closeListModal(); closeIdeaBank(); closeShiftModal();
+            } 
+        };
+    </script>
+</body>
+</html>
