@@ -32,7 +32,7 @@
             --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
             --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.08), 0 2px 4px -2px rgba(0, 0, 0, 0.04);
             --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -4px rgba(0, 0, 0, 0.05);
-            --shadow-modal: 0 20px 40px -10px rgba(15, 23, 42, 0.2);
+            --shadow-modal: 0 25px 50px -12px rgba(15, 23, 42, 0.25);
             --transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
@@ -44,7 +44,7 @@
             border-radius: inherit; 
         }
         
-        /* Главные скроллбары (сделал аккуратнее) */
+        /* Скроллбары */
         ::-webkit-scrollbar { width: 6px; height: 6px; }
         ::-webkit-scrollbar-track { background: transparent; }
         ::-webkit-scrollbar-thumb { background: var(--border-dark); border-radius: var(--radius-pill); }
@@ -84,8 +84,8 @@
         .mini-day.active { background: var(--primary); color: white; font-weight: 600; box-shadow: 0 4px 6px rgba(79, 70, 229, 0.25); }
 
         /* --- ЦЕНТРАЛЬНАЯ ЧАСТЬ --- */
-        .main-view { flex: 1; display: flex; flex-direction: column; background: var(--bg-body); min-width: 0; min-height: 0; }
-        header { padding: 20px 32px; border-bottom: 1px solid var(--border-light); display: flex; justify-content: space-between; align-items: center; background: var(--bg-surface); z-index: 10; flex-shrink: 0; }
+        .main-view { flex: 1; display: flex; flex-direction: column; background: var(--bg-body); min-width: 0; min-height: 0; position: relative; }
+        header { padding: 20px 32px; border-bottom: 1px solid var(--border-light); display: flex; justify-content: space-between; align-items: center; background: var(--bg-surface); z-index: 10; flex-shrink: 0; box-shadow: 0 1px 2px rgba(0,0,0,0.02); }
         .nav-controls { display: flex; align-items: center; gap: 16px; }
         .nav-controls h2 { margin: 0 0 0 16px; font-weight: 700; font-size: 20px; min-width: 160px; color: var(--text-main); letter-spacing: -0.01em;}
         
@@ -96,13 +96,33 @@
         .btn-primary { background: var(--primary); color: white; border: 1px solid transparent; font-weight: 600; box-shadow: 0 2px 4px rgba(79, 70, 229, 0.2); }
         .btn-primary:hover { background: var(--primary-hover); transform: translateY(-1px); box-shadow: 0 4px 8px rgba(79, 70, 229, 0.3); color: white;}
         
-        .view-switcher { display: flex; background: var(--bg-body); padding: 4px; border-radius: var(--radius-sm); border: 1px solid var(--border-light); }
-        .view-switcher button { border: none; background: transparent; padding: 6px 14px; cursor: pointer; border-radius: 4px; font-weight: 500; color: var(--text-secondary); transition: var(--transition); font-family: inherit; font-size: 13px; }
+        .view-switcher { display: flex; background: var(--bg-body); padding: 2px; border-radius: 6px; border: 1px solid var(--border-light); }
+        .view-switcher button { border: none; background: transparent; padding: 4px 10px; cursor: pointer; border-radius: 4px; font-weight: 500; color: var(--text-secondary); transition: var(--transition); font-family: inherit; font-size: 12px; }
         .view-switcher button:hover { color: var(--text-main); }
         .view-switcher button.active { background: var(--bg-surface); color: var(--text-main); font-weight: 600; box-shadow: var(--shadow-sm); }
 
-        /* Сетки календаря (ИСПРАВЛЕНО ДЛЯ ПРЕДОТВРАЩЕНИЯ ПЕРЕПОЛНЕНИЯ) */
-        .grid-container { flex: 1; overflow: hidden; position: relative; display: flex; flex-direction: column; padding: 24px 32px; gap: 24px; min-height: 0; }
+        /* Плавающий виджет зума */
+        .zoom-widget {
+            position: absolute;
+            bottom: 24px;
+            right: 32px;
+            display: flex;
+            align-items: center;
+            background: var(--bg-surface);
+            padding: 4px;
+            border-radius: 8px;
+            border: 1px solid var(--border-light);
+            box-shadow: var(--shadow-md);
+            z-index: 100;
+        }
+        .zoom-widget button {
+            border: none; background: transparent; padding: 6px 12px; cursor: pointer; color: var(--text-secondary); font-weight: 600; font-size: 16px; border-radius: 4px; transition: var(--transition);
+        }
+        .zoom-widget button:hover { background: var(--bg-body); color: var(--text-main); }
+        .zoom-widget span { font-size: 13px; font-weight: 600; color: var(--text-main); width: 48px; text-align: center; pointer-events: none; }
+
+        /* Сетки календаря */
+        .grid-container { flex: 1; overflow: hidden; position: relative; display: flex; flex-direction: column; padding: 24px 32px; gap: 24px; min-height: 0; transform-origin: top left; transition: zoom 0.2s ease; }
         
         .month-view-wrapper { flex: 1; display: flex; flex-direction: column; box-shadow: var(--shadow-sm); border-radius: var(--radius-md); background: var(--bg-surface); border: 1px solid var(--border-light); overflow: hidden; min-height: 0; }
         .month-days-header { display: grid; grid-template-columns: repeat(7, 1fr); background: var(--bg-body); border-bottom: 1px solid var(--border-light); padding: 12px 0; font-size: 13px; font-weight: 600; color: var(--text-secondary); text-align: center; z-index: 5; flex-shrink: 0;}
@@ -112,14 +132,14 @@
         .grid-cell:hover { background: #f8fafc; }
         .grid-cell.drag-over { background: var(--primary-light); box-shadow: inset 0 0 0 2px var(--primary); }
         .grid-cell.past-day { background: #f8fafc; }
-        .grid-cell.past-day .event-card { opacity: 0.6; }
-        .grid-cell.past-day:hover .event-card { opacity: 1; }
+        .grid-cell.past-day .event-card { opacity: 0.65; filter: grayscale(20%); }
+        .grid-cell.past-day:hover .event-card { opacity: 1; filter: grayscale(0%); }
         .grid-cell.other-month { background: #f1f5f9; }
         .grid-cell.other-month .day-num { color: var(--text-muted); }
         .grid-cell.today .day-num { color: white; background: var(--primary); border-radius: var(--radius-pill); width: 26px; height: 26px; display: flex; align-items: center; justify-content: center; margin-bottom: 8px; font-weight: 600; box-shadow: 0 2px 6px rgba(79,70,229,0.3); }
         .day-num { font-size: 13px; margin-bottom: 6px; display: inline-flex; align-items: center; font-weight: 600; color: var(--text-secondary); pointer-events: none; flex-shrink: 0; height: 26px;}
 
-        /* Кастомный скроллбар внутри ячейки дня, чтобы не мешал тексту */
+        /* Скроллбар внутри ячейки */
         .cell-events-wrapper { flex: 1; display: flex; flex-direction: column; overflow-y: auto; padding-right: 4px; min-height: 0; gap: 6px;}
         .cell-events-wrapper::-webkit-scrollbar { width: 4px; }
         .cell-events-wrapper::-webkit-scrollbar-track { background: transparent; }
@@ -133,30 +153,28 @@
             border: 1px solid var(--border-light); border-left-width: 4px; 
             cursor: grab; flex-shrink: 0; transition: var(--transition); 
             display: flex; flex-direction: column; position: relative; 
-            box-shadow: 0 1px 2px rgba(0,0,0,0.02);
-            /* Решает проблему длинного текста и высоты */
+            box-shadow: 0 1px 2px rgba(0,0,0,0.03);
             height: auto;
             word-break: break-word;
             white-space: normal;
         }
         .event-card.is-planned { background: #ffffff; }
-        .event-card.is-planned:hover { transform: translateY(-2px); box-shadow: var(--shadow-md); border-color: var(--border-dark); }
-        .event-card.is-published { background: #f8fafc; border-color: #e2e8f0; opacity: 0.7; }
-        .event-card.is-published .event-title { color: var(--text-muted); text-decoration: line-through; text-decoration-color: rgba(0,0,0,0.2);}
-        .event-card.is-published:hover { opacity: 0.95; transform: translateY(-2px); box-shadow: var(--shadow-sm); border-color: var(--border-dark); text-decoration: none;}
+        .event-card.is-planned:hover { transform: translateY(-2px); box-shadow: var(--shadow-md); border-color: var(--border-dark); z-index: 10; }
+        .event-card.is-published { background: #f8fafc; border-color: #e2e8f0; opacity: 0.8; }
+        .event-card.is-published .event-title { color: var(--text-muted); text-decoration: line-through; text-decoration-color: rgba(0,0,0,0.25);}
+        .event-card.is-published:hover { opacity: 1; transform: translateY(-2px); box-shadow: var(--shadow-sm); border-color: var(--border-dark); text-decoration: none;}
         .event-card:active { cursor: grabbing; transform: scale(0.98); box-shadow: var(--shadow-lg); }
         
-        .event-header { display: flex; align-items: flex-start; gap: 6px;}
+        .event-header { display: flex; align-items: flex-start; gap: 8px;}
         
-        /* ПОЛНЫЙ ВЫВОД ТЕМЫ - БЕЗ ОБРЕЗАНИЯ */
         .event-title { 
-            flex: 1; font-weight: 600; font-size: 12px; line-height: 1.35; 
+            flex: 1; font-weight: 600; font-size: 12px; line-height: 1.4; 
             word-break: break-word; display: block; 
             pointer-events: none; margin-top: 1px;
         }
         
         .status-toggle {
-            width: 14px; height: 14px; flex-shrink: 0; margin-top: 1px;
+            width: 14px; height: 14px; flex-shrink: 0; margin-top: 2px;
             border-radius: 4px; border: 2px solid var(--border-dark);
             display: flex; align-items: center; justify-content: center;
             cursor: pointer; transition: var(--transition);
@@ -177,13 +195,33 @@
         .content-col, .week-day-cell { flex: 1; border-left: 1px solid var(--border-light); transition: background 0.2s ease; display: flex; flex-direction: column; gap: 8px; padding: 12px; overflow-y: auto; min-width: 0;}
         .content-col.drag-over, .week-day-cell.drag-over { background: var(--primary-light); box-shadow: inset 0 0 0 2px var(--primary); }
 
-        /* СЕТКА НЕДЕЛИ РАСШИРЕНА ДЛЯ КОМФОРТА */
         .week-view { display: flex; flex-direction: column; min-width: 1200px; }
         .week-header-row { display: flex; border-bottom: 1px solid var(--border-light); position: sticky; top: 0; background: var(--bg-body); z-index: 10; }
         .week-time-header { width: 80px; flex-shrink: 0; }
         .week-header-cell { flex: 1; text-align: center; padding: 16px 8px; border-left: 1px solid var(--border-light); font-size: 13px; font-weight: 600; color: var(--text-secondary); cursor: pointer; transition: var(--transition); min-width: 0;}
         .week-header-cell:hover { background: var(--bg-surface); color: var(--text-main); }
         .week-header-cell.today { color: var(--primary); box-shadow: inset 0 -3px 0 var(--primary); background: var(--primary-light);}
+
+        /* Полоска текущего времени */
+        .current-time-line {
+            position: absolute;
+            left: 80px;
+            right: 0;
+            height: 2px;
+            background-color: #ef4444;
+            z-index: 20;
+            pointer-events: none;
+        }
+        .current-time-line::before {
+            content: '';
+            position: absolute;
+            left: -5px;
+            top: -4px;
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background-color: #ef4444;
+        }
 
         /* --- ПРАВАЯ ПАНЕЛЬ --- */
         .analytics-panel { width: 340px; border-left: 1px solid var(--border-light); padding: 24px; background: var(--bg-surface); display: flex; flex-direction: column; gap: 24px; overflow-y: auto; z-index: 2; flex-shrink: 0; }
@@ -201,6 +239,7 @@
         .chart-container.fade { opacity: 0; }
         .recommendation-box { margin-top: 16px; padding: 12px; background: var(--primary-light); border-radius: var(--radius-sm); font-size: 12px; color: var(--text-secondary); line-height: 1.5; border: 1px solid #c7d2fe;}
         .recommendation-box strong { color: var(--primary); display: block; margin-bottom: 4px; font-weight: 600; font-size: 13px; }
+        .recommendation-tag { display: inline-block; background: #e0e7ff; color: #4338ca; padding: 2px 6px; border-radius: 4px; margin: 2px 2px 0 0; font-weight: 500; font-size: 11px; border: 1px solid #c7d2fe; }
 
         .balance-bar { height: 8px; background: var(--border-light); border-radius: var(--radius-pill); display: flex; overflow: hidden; margin: 8px 0 20px 0;}
         .bar-bus { background: var(--business-color); transition: width 0.6s cubic-bezier(0.4, 0, 0.2, 1); }
@@ -208,7 +247,7 @@
         .balance-labels { display: flex; justify-content: space-between; font-size: 12px; font-weight: 600; color: var(--text-main); }
         .balance-labels span { color: var(--text-secondary); font-weight: 500;}
 
-        /* --- НОВЫЙ ДИЗАЙН ЧЕК-ЛИСТА --- */
+        /* Чек-лист тем */
         .checklist-container { display: flex; flex-direction: column; gap: 8px; margin-top: 16px; max-height: 320px; overflow-y: auto; padding-right: 4px; }
         .checklist-item { 
             display: flex; flex-direction: column; gap: 8px; padding: 12px; 
@@ -221,22 +260,22 @@
         .checklist-item.missing { border-left: 4px solid var(--border-dark); background: var(--bg-body); opacity: 0.9; }
         
         .checklist-header { display: flex; justify-content: space-between; align-items: center; width: 100%; }
-        .checklist-rubric-name { font-weight: 600; color: var(--text-main); font-size: 13px; }
+        .checklist-rubric-name { font-weight: 600; color: var(--text-main); font-size: 13px; line-height: 1.3;}
         .checklist-item.present .checklist-rubric-name { color: #065f46; }
         .checklist-item.missing .checklist-rubric-name { color: var(--text-secondary); }
         
-        .checklist-count { font-weight: 600; font-size: 11px; padding: 2px 8px; border-radius: var(--radius-pill); }
+        .checklist-count { font-weight: 600; font-size: 11px; padding: 2px 8px; border-radius: var(--radius-pill); white-space: nowrap; }
         .checklist-item.present .checklist-count { background: #dcfce7; color: #166534; }
         .checklist-item.missing .checklist-count { background: var(--border-light); color: var(--text-secondary); }
         
         .progress-track { width: 100%; height: 4px; background: var(--border-light); border-radius: var(--radius-pill); overflow: hidden; }
         .progress-fill { height: 100%; background: #10b981; border-radius: var(--radius-pill); transition: width 0.3s ease; }
 
-        /* --- МОДАЛЬНЫЕ ОКНА (Sticky исправления) --- */
+        /* --- МОДАЛЬНЫЕ ОКНА --- */
         @keyframes fadeIn { from { opacity: 0; backdrop-filter: blur(0px); } to { opacity: 1; backdrop-filter: blur(4px); } }
         @keyframes slideUp { from { opacity: 0; transform: translateY(20px) scale(0.98); } to { opacity: 1; transform: translateY(0) scale(1); } }
 
-        .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(15, 23, 42, 0.6); z-index: 1000; justify-content: center; align-items: center; animation: fadeIn 0.2s ease-out forwards; padding: 24px; }
+        .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(15, 23, 42, 0.6); z-index: 1000; justify-content: center; align-items: center; animation: fadeIn 0.2s ease-out forwards; padding: 24px; backdrop-filter: blur(4px); }
         
         .modal-content { 
             background: var(--bg-surface); 
@@ -246,7 +285,7 @@
             display: flex; flex-direction: column; 
             animation: slideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1); 
             border: 1px solid var(--border-light); 
-            overflow: hidden; /* Важно для работы sticky */
+            overflow: hidden;
         }
         
         .modal-header { 
@@ -261,7 +300,6 @@
         .close-btn { background: var(--bg-body); border: none; font-size: 20px; cursor: pointer; color: var(--text-secondary); border-radius: 50%; width: 32px; height: 32px; display: flex; justify-content: center; align-items: center; transition: var(--transition); line-height: 1; }
         .close-btn:hover { background: #fee2e2; color: #dc2626; transform: rotate(90deg);}
         
-        /* Скроллируемая область для модалок */
         #pubForm, #viewModalContent, #listModalContent, #ideaBankContent, #shiftModalContent {
             overflow-y: auto;
             padding: 24px 32px;
@@ -326,7 +364,7 @@
         <div class="filter-group">
             <h3>Ресурсы</h3>
             <button class="btn" style="width: 100%; justify-content: flex-start; gap: 10px; color: var(--primary); border-color: var(--primary-light); background: var(--primary-light); font-weight: 600;" onclick="openIdeaBank('ALL')">
-                💡 Весь банк идей
+                💡 Банк идей
             </button>
         </div>
 
@@ -346,7 +384,7 @@
             <h3>Канал</h3>
             <label class="checkbox-item"><input type="checkbox" class="filter-ch" value="КЛИК" checked onchange="refreshView()"> КЛИК</label>
             <label class="checkbox-item"><input type="checkbox" class="filter-ch" value="Чат" checked onchange="refreshView()"> Чат</label>
-            <label class="checkbox-item"><input type="checkbox" class="filter-ch" value="Email" checked onchange="refreshView()"> Email</label>
+            <label class="checkbox-item"><input type="checkbox" class="filter-ch" value="Рассылка" checked onchange="refreshView()"> Рассылка</label>
         </div>
     </aside>
 
@@ -361,13 +399,25 @@
                 </div>
                 <h2 id="currentPeriod">Месяц Год</h2>
             </div>
-            <div id="syncStatus" style="font-size:12px; font-weight:600; padding:6px 12px; border-radius:9999px; background:#f1f5f9; color:#64748b; border:1px solid #e2e8f0; margin-right:12px; white-space:nowrap;" title="Статус синхронизации">⏳ Проверяем данные</div>
-            <div class="view-switcher" id="viewBtns">
-                <button id="btnDay" onclick="changeView('day')">День</button>
-                <button id="btnWeek" onclick="changeView('week')">Неделя</button>
-                <button id="btnMonth" class="active" onclick="changeView('month')">Месяц</button>
+            
+            <div style="display: flex; align-items: center;">
+                <div id="syncStatus" style="font-size:12px; font-weight:600; padding:4px 10px; border-radius:9999px; background:#f1f5f9; color:#64748b; border:1px solid #e2e8f0; margin-right:12px; white-space:nowrap;" title="Статус синхронизации">⏳ Проверяем данные</div>
+                
+                <div class="view-switcher" id="viewBtns">
+                    <button id="btnDay" onclick="changeView('day')">День</button>
+                    <button id="btnWeek" onclick="changeView('week')">Неделя</button>
+                    <button id="btnMonth" class="active" onclick="changeView('month')">Месяц</button>
+                </div>
             </div>
         </header>
+        
+        <!-- ПЛАВАЮЩИЙ ВИДЖЕТ ЗУМА (Внизу справа) -->
+        <div class="zoom-widget">
+            <button title="Уменьшить масштаб" onclick="changeZoom(-0.1)">-</button>
+            <span id="zoomLabel">100%</span>
+            <button title="Увеличить масштаб" onclick="changeZoom(0.1)">+</button>
+        </div>
+
         <div class="grid-container" id="calendarContent"></div>
     </main>
 
@@ -399,7 +449,7 @@
 
         <div class="stat-card" id="balanceCard">
             <h4>Баланс повестки</h4>
-            <span class="stat-subtitle">Бизнес / Социальная (Только КЛИК)</span>
+            <span class="stat-subtitle">Бизнес / Социальная</span>
             <div id="orgBalancesContainer"></div>
         </div>
 
@@ -454,7 +504,7 @@
                         <div class="checkbox-group">
                             <label><input type="checkbox" class="form-ch" value="КЛИК" checked> КЛИК</label>
                             <label><input type="checkbox" class="form-ch" value="Чат"> Чат</label>
-                            <label><input type="checkbox" class="form-ch" value="Email"> Email</label>
+                            <label><input type="checkbox" class="form-ch" value="Рассылка"> Рассылка</label>
                         </div>
                     </div>
                 </div>
@@ -522,6 +572,9 @@
                 </div>
                 <button class="close-btn" onclick="closeIdeaBank()">&times;</button>
             </div>
+            <div id="ideaBankOrgTabs" style="display: flex; gap: 8px; border-bottom: 1px solid var(--border-light); padding: 16px 32px 0 32px; background: var(--bg-body); flex-shrink: 0;">
+                <!-- Динамические табы сюда -->
+            </div>
             <div id="ideaBankContent" style="display: flex; flex-direction: column; gap: 0;">
             </div>
             <div id="addIdeaContainer">
@@ -587,21 +640,39 @@
 
     <script>
         const team = ["Ляйсан Гарафиева", "Алия Муллакаева", "Алина Муллакаева", "Анастасия Флегантова", "Чулпан Валеева", "Ольга Садовникова", "Ксения Балянина"];
+        
+        // Другое теперь выделено в отдельный тип
         const rubricsMap = { 
             "Безопасность": "Бизнес", "Забота о сотрудниках": "Социальная", "Изменения/Трансформации": "Бизнес", "Инвест.проекты": "Бизнес",
             "Карьера и образование": "Социальная", "Клиенты/Продукция": "Бизнес", "Наука и инновации": "Бизнес", "Открытый СИБУР": "Бизнес",
             "Праздники": "Социальная", "Развитие городов и социальная ответственность": "Социальная", "Семейные ценности": "Социальная", 
-            "Спорт и ЗОЖ": "Социальная", "Экология и устойчивое развитие": "Бизнес", "Эффективность процессов": "Бизнес", "Другое": "Бизнес"
+            "Спорт и ЗОЖ": "Социальная", "Экология и устойчивое развитие": "Бизнес", "Эффективность процессов": "Бизнес", "Другое": "Без типа"
         };
-        const targetRubrics = ['Безопасность', 'Забота о сотрудниках', 'Открытый СИБУР', 'Эффективность процессов'];
+        
+        // Динамическое определение целевых рубрик (исключаем Другое и Праздники)
+        const targetRubrics = Object.keys(rubricsMap).filter(r => r !== 'Другое' && r !== 'Праздники');
 
-        let ideaBank = JSON.parse(localStorage.getItem('ideaBankDB')) || {
-            "Безопасность": ["Топ-5 ошибок по ТБ в офисе (Опрос)", "Как правильно делать перерывы при работе за ПК", "Правила эвакуации: освежаем знания"],
-            "Забота о сотрудниках": ["Обзор программы ДМС: скрытые фишки", "Психологическая поддержка: куда обращаться"],
-            "Открытый СИБУР": ["Интервью с руководителем: планы на квартал", "День открытых дверей: как пригласить семью"],
-            "Эффективность процессов": ["Как мы сократили время согласования на 20%", "Предложи идею: сбор инициатив от команды"],
-            "Спорт и ЗОЖ": ["Челлендж: 10 000 шагов неделю", "Сбор команд на корпоративный турнир по волейболу"]
+        // Мигрируем на новую структуру банка идей (по организациям)
+        let defaultIdeaBank = {
+            "КОС": {
+                "Безопасность": ["Топ-5 ошибок по ТБ в офисе (Опрос)", "Правила эвакуации: освежаем знания"],
+                "Открытый СИБУР": ["Интервью с руководителем: планы на квартал", "День открытых дверей: как пригласить семью"]
+            },
+            "СРТ": {
+                "Забота о сотрудниках": ["Обзор программы ДМС: скрытые фишки", "Психологическая поддержка: куда обращаться"],
+                "Эффективность процессов": ["Предложи идею: сбор инициатив от команды"]
+            },
+            "СИ": {
+                "Эффективность процессов": ["Как мы сократили время согласования на 20%"],
+                "Спорт и ЗОЖ": ["Челлендж: 10 000 шагов неделю", "Сбор команд на корпоративный турнир по волейболу"]
+            }
         };
+
+        let ideaBank = JSON.parse(localStorage.getItem('ideaBankDB_v3'));
+        if (!ideaBank || !ideaBank['КОС']) {
+            ideaBank = defaultIdeaBank; // Загружаем стартовую базу если ее нет
+            localStorage.setItem('ideaBankDB_v3', JSON.stringify(ideaBank));
+        }
 
         let db = JSON.parse(localStorage.getItem('contentPlanDB')) || [
             { id: 1, date: '2026-05-01', time: '10:00', status: 'Опубликовано', assignee: 'Ляйсан Гарафиева', channels: ['КЛИК'], orgs: ['КОС'], theme: 'Корригирующие очки', rubric: 'Безопасность', type: 'Бизнес' },
@@ -620,7 +691,7 @@
 
         function saveLocalCopies() {
             localStorage.setItem('contentPlanDB', JSON.stringify(db));
-            localStorage.setItem('ideaBankDB', JSON.stringify(ideaBank));
+            localStorage.setItem('ideaBankDB_v3', JSON.stringify(ideaBank));
         }
 
         function initCloudStorage() {
@@ -665,18 +736,16 @@
                     firebaseIsApplyingRemoteData = false;
                     updateSyncStatus('❌ Ошибка синхронизации', 'error');
                     console.error("Ошибка Realtime Database:", error);
-                    alert("Не удалось загрузить облачные данные. Приложение продолжит работать локально. Откройте Console — там будет точная ошибка.");
                 }
             }, (error) => {
                 updateSyncStatus('❌ Ошибка синхронизации', 'error');
                 console.error("Ошибка Realtime Database:", error);
-                alert("Не удалось подключить облачную синхронизацию. Проверьте правила Realtime Database.");
             });
         }
 
         async function saveToCloudNow() {
             if (!firebasePlanRef || firebaseIsApplyingRemoteData) {
-                if (!firebasePlanRef) updateSyncStatus('⚠️ Сохранено только локально', 'local');
+                if (!firebasePlanRef) updateSyncStatus('⚠️ Сохранено локально', 'local');
                 return;
             }
 
@@ -696,7 +765,6 @@
             } catch (error) {
                 updateSyncStatus('❌ Данные не сохранились', 'error');
                 console.error("Не удалось сохранить данные в облаке:", error);
-                alert("Не удалось сохранить данные в облаке. Локально данные сохранены. Проверьте правила Realtime Database.");
             }
         }
 
@@ -742,12 +810,27 @@
         let draggedEventId = null; 
         let editingId = null; 
         let currentChartOrgIdx = 0; 
+        
+        // --- ПЕРЕМЕННАЯ И ФУНКЦИЯ ДЛЯ ЗУМА ---
+        let currentZoom = 1.0;
+        function changeZoom(step) {
+            currentZoom += step;
+            if(currentZoom < 0.5) currentZoom = 0.5; // Минимальный масштаб 50%
+            if(currentZoom > 1.5) currentZoom = 1.5; // Максимальный масштаб 150%
+            
+            document.getElementById('zoomLabel').innerText = Math.round(currentZoom * 100) + '%';
+            document.getElementById('calendarContent').style.zoom = currentZoom;
+        }
 
         // Переменные для алгоритма Smart Shifting
         const KLIK_DAILY_LIMIT = 5;
         let pendingSaveItem = null;    
         let pendingShiftCandidate = null; 
         let pendingShiftDate = null;   
+        
+        // Переменные для банка идей
+        let currentIdeaBankOrg = 'КОС';
+        let currentIbRubric = 'ALL';
 
         let todayDate = new Date(); 
         let displayYear = todayDate.getFullYear();
@@ -838,6 +921,66 @@
             document.getElementById('btn' + view.charAt(0).toUpperCase() + view.slice(1)).classList.add('active');
             refreshView();
         }
+        
+        // Линия текущего времени по Москве
+        function updateCurrentTimeLine() {
+            const oldLine = document.getElementById('currentTimeLine');
+            if (oldLine) oldLine.remove();
+
+            // Получаем Московское время
+            const moscowTimeStr = new Date().toLocaleString("en-US", {timeZone: "Europe/Moscow"});
+            const moscowDate = new Date(moscowTimeStr);
+            const mHours = moscowDate.getHours();
+            const mMins = moscowDate.getMinutes();
+
+            // Если время вне рабочей сетки 8:00 - 20:59, не рисуем полоску
+            if (mHours < 8 || mHours > 20) return;
+
+            const moscowDateStr = formatDate(moscowDate);
+
+            if (activeView === 'day' && activeDateStr === moscowDateStr) {
+                const dayView = document.getElementById('dayView');
+                if (!dayView) return;
+                dayView.style.position = 'relative';
+                
+                const line = document.createElement('div');
+                line.id = 'currentTimeLine';
+                line.className = 'current-time-line';
+                const top = (mHours - 8) * 100 + (mMins / 60) * 100;
+                line.style.top = top + 'px';
+                
+                dayView.appendChild(line);
+            }
+
+            if (activeView === 'week') {
+                const weekView = document.getElementById('weekView');
+                if (!weekView) return;
+
+                const parts = activeDateStr.split('-');
+                const activeDateObj = new Date(parts[0], parts[1] - 1, parts[2]);
+                let dow = activeDateObj.getDay() || 7;
+                const start = new Date(activeDateObj); start.setDate(activeDateObj.getDate() - dow + 1);
+                
+                let dayIndex = -1;
+                for(let i = 0; i < 7; i++) {
+                    const d = new Date(start); d.setDate(start.getDate() + i);
+                    if (formatDate(d) === moscowDateStr) { dayIndex = i; break; }
+                }
+
+                if (dayIndex !== -1) {
+                    weekView.style.position = 'relative';
+                    const headerEl = document.querySelector('.week-header-row');
+                    const headerHeight = headerEl ? headerEl.offsetHeight : 52;
+                    const top = headerHeight + (mHours - 8) * 100 + (mMins / 60) * 100;
+                    
+                    const line = document.createElement('div');
+                    line.id = 'currentTimeLine';
+                    line.className = 'current-time-line';
+                    line.style.top = top + 'px';
+                    weekView.appendChild(line);
+                }
+            }
+        }
 
         function renderMonth() {
             const container = document.getElementById('calendarContent');
@@ -875,6 +1018,7 @@
                 data.filter(e => e.date === cellDateStr).sort((a,b) => a.time.localeCompare(b.time)).forEach(ev => wrapper.appendChild(createCardElement(ev)));
                 cell.appendChild(wrapper); grid.appendChild(cell);
             }
+            updateCurrentTimeLine();
         }
 
         function renderDay(dateStr) {
@@ -896,6 +1040,7 @@
                 data.filter(e => e.time.startsWith(String(h).padStart(2,'0'))).forEach(ev => cCol.appendChild(createCardElement(ev)));
                 row.appendChild(cCol); dayView.appendChild(row);
             }
+            updateCurrentTimeLine();
         }
 
         function renderWeek() {
@@ -931,6 +1076,7 @@
                 }
                 weekView.appendChild(row);
             }
+            updateCurrentTimeLine();
         }
 
         function renderMiniCalendar() {
@@ -956,6 +1102,9 @@
             const ctx = document.getElementById('donutChart').getContext('2d');
             const palette = ['#4f46e5', '#10b981', '#f59e0b', '#8b5cf6', '#0ea5e9', '#ec4899', '#14b8a6', '#ef4444', '#84cc16', '#a855f7'];
             myChart = new Chart(ctx, { type: 'doughnut', data: { labels: [], datasets: [{ data: [], backgroundColor: palette, borderWidth: 0, hoverOffset: 4 }] }, options: { cutout: '72%', maintainAspectRatio: false, plugins: { legend: { position: 'right', labels: { usePointStyle: true, padding: 14, boxWidth: 8, font: { size: 11, family: 'Inter, sans-serif' } } }, tooltip: { backgroundColor: 'rgba(15, 23, 42, 0.9)', padding: 12, callbacks: { label: function(ctx) { let val = ctx.raw || 0; let total = ctx.chart._metasets[ctx.datasetIndex].total; return ` ${ctx.label}: ${val} шт. (${total > 0 ? Math.round((val / total) * 100) : 0}%)`; } } } } } });
+            
+            // Интервал для обновления текущего времени в сетке
+            setInterval(updateCurrentTimeLine, 60000);
         }
 
         function updateAnalytics() {
@@ -972,9 +1121,24 @@
 
             let balHtml = '';
             chartOrgsList.forEach(org => {
-                const oData = klikMonthData.filter(e => e.orgs.includes(org)); const total = oData.length;
-                const busPerc = total ? Math.round((oData.filter(e => e.type === 'Бизнес').length / total) * 100) : 50;
-                balHtml += `<div style="margin-bottom:16px;"><div class="balance-labels"><span>${org} <span style="color:var(--text-muted);font-weight:400;">(${total})</span></span><span>${busPerc}% / ${100-busPerc}%</span></div><div class="balance-bar"><div class="bar-bus" style="width:${busPerc}%"></div><div class="bar-soc" style="width:${100-busPerc}%"></div></div></div>`;
+                const orgAllData = klikMonthData.filter(e => e.orgs.includes(org));
+                const eligibleData = orgAllData.filter(e => e.type === 'Бизнес' || e.type === 'Социальная');
+                const total = eligibleData.length;
+                
+                const busPerc = total ? Math.round((eligibleData.filter(e => e.type === 'Бизнес').length / total) * 100) : 50;
+                const socPerc = total ? 100 - busPerc : 50;
+                
+                balHtml += `
+                    <div style="margin-bottom:16px;">
+                        <div class="balance-labels">
+                            <span>${org} <span style="color:var(--text-muted);font-weight:400;" title="Без рубрики Другое">(${total})</span></span>
+                            <span>${busPerc}% / ${socPerc}%</span>
+                        </div>
+                        <div class="balance-bar">
+                            <div class="bar-bus" style="width:${busPerc}%" title="Бизнес: ${busPerc}%"></div>
+                            <div class="bar-soc" style="width:${socPerc}%" title="Социальная: ${socPerc}%"></div>
+                        </div>
+                    </div>`;
             });
             document.getElementById('orgBalancesContainer').innerHTML = balHtml;
             
@@ -984,10 +1148,8 @@
             const allRubrics = Object.keys(rubricsMap);
             let checklistHtml = '';
             
-            // Заполненные рубрики
             allRubrics.filter(r => rubricCounts[r] > 0).forEach(rubric => {
-                const ideaBtnHtml = `<button onclick="event.stopPropagation(); openIdeaBank('${rubric}')" title="Банк идей" style="background:none; border:none; cursor:pointer; padding:4px 10px; background:var(--primary-light); border-radius:6px; font-size:11px; transition:0.2s; color: var(--primary); font-weight: 600;">💡 Банк идей</button>`;
-                
+                const ideaBtnHtml = `<button onclick="event.stopPropagation(); openIdeaBank('${rubric}', '${targetOrg}')" title="Банк идей" style="background:none; border:none; cursor:pointer; padding:4px 10px; background:var(--primary-light); border-radius:6px; font-size:11px; transition:0.2s; color: var(--primary); font-weight: 600;">+ Идеи</button>`;
                 checklistHtml += `
                     <div class="checklist-item present" onclick="openListModal('${rubric}', '${targetOrg}')" title="Нажмите, чтобы посмотреть посты">
                         <div class="checklist-header">
@@ -1003,10 +1165,8 @@
                     </div>`;
             });
             
-            // Незаполненные рубрики
             allRubrics.filter(r => !rubricCounts[r]).forEach(rubric => {
-                const ideaBtnHtml = `<button onclick="openIdeaBank('${rubric}')" title="Выбрать идею из банка" style="background:none; border:none; cursor:pointer; padding:4px 10px; background:var(--primary-light); border-radius:6px; font-size:11px; transition:0.2s; color: var(--primary); font-weight: 600;">💡 Банк идей</button>`;
-                
+                const ideaBtnHtml = `<button onclick="openIdeaBank('${rubric}', '${targetOrg}')" title="Выбрать идею из банка" style="background:none; border:none; cursor:pointer; padding:4px 10px; background:var(--primary-light); border-radius:6px; font-size:11px; transition:0.2s; color: var(--primary); font-weight: 600;">+ Идеи</button>`;
                 checklistHtml += `
                     <div class="checklist-item missing">
                         <div class="checklist-header">
@@ -1026,8 +1186,37 @@
             if(myChart) {
                 const labels = Object.keys(rubricCounts); myChart.data.labels = labels; myChart.data.datasets[0].data = Object.values(rubricCounts); myChart.update();
                 const recBlock = document.getElementById('chartRecommendations');
-                if (chartData.length === 0) { recBlock.innerHTML = `<strong>💡 Подсказка:</strong> На этот месяц пока нет публикаций для КЛИК в ${targetOrg}.`; } 
-                else { const missingTargetRubrics = targetRubrics.filter(r => !labels.includes(r)); recBlock.innerHTML = missingTargetRubrics.length > 0 ? `<strong>💡 Зона роста:</strong> Для идеального распределения добавьте контент в: <span style="font-weight:500;">${missingTargetRubrics.join(', ')}</span>.` : `<strong>🏆 Отличная работа!</strong> Идеальное распределение базовых рубрик достигнуто.`; }
+                
+                if (chartData.length === 0) { 
+                    recBlock.innerHTML = `<strong>💡 Подсказка:</strong> На этот месяц пока нет публикаций для КЛИК в ${targetOrg}.`; 
+                } else { 
+                    const totalKlikPosts = chartData.length;
+                    let maxRubric = null; let maxCount = 0;
+                    for (const [r, count] of Object.entries(rubricCounts)) {
+                        if (count > maxCount) { maxCount = count; maxRubric = r; }
+                    }
+
+                    const missingTargetRubrics = targetRubrics.filter(r => !labels.includes(r)); 
+                    let recs = [];
+                    
+                    // Логика умной подсказки (Перекос повестки > 40%)
+                    if (maxCount / totalKlikPosts >= 0.4 && totalKlikPosts >= 3) {
+                        const perc = Math.round((maxCount/totalKlikPosts)*100);
+                        recs.push(`<div style="color: #b91c1c; margin-bottom: 8px;"><strong>⚠️ Сильный перекос:</strong> Тема «${maxRubric}» занимает ${perc}% повестки. Разбавьте её другими рубриками.</div>`);
+                    }
+                    
+                    // Логика умной подсказки (Забыли темы)
+                    if (missingTargetRubrics.length > 0) {
+                        let displayedTags = missingTargetRubrics.slice(0, 4).map(r => `<span class="recommendation-tag">${r}</span>`).join(' ');
+                        if (missingTargetRubrics.length > 4) displayedTags += `<span style="font-size: 11px; color: var(--text-muted);"> и еще ${missingTargetRubrics.length - 4}</span>`;
+                        recs.push(`<div><strong>📉 Мало внимания:</strong> Мы забыли про важные рубрики:<br><div style="margin-top:6px;">${displayedTags}</div></div>`);
+                    } 
+                    
+                    if (recs.length === 0) {
+                        recs.push(`<strong>🏆 Отличная работа!</strong> Вы охватили все основные рубрики без сильных перекосов.`);
+                    }
+                    recBlock.innerHTML = recs.join('');
+                }
             }
         }
 
@@ -1046,9 +1235,9 @@
         }
         
         function closeAddModal() { document.getElementById('addModal').style.display = 'none'; }
+        
         function updateType() { document.getElementById('f_type').value = rubricsMap[document.getElementById('f_rubric').value] || "Бизнес"; }
 
-        // --- ЛОГИКА СОХРАНЕНИЯ СО SMART SHIFTING И ПРОВЕРКОЙ ВРЕМЕНИ ---
         function savePublication(e) {
             e.preventDefault();
             
@@ -1069,10 +1258,7 @@
 
             if(!item.channels.length || !item.orgs.length) return alert("Выберите хотя бы один канал и организацию");
 
-            // Проверки для КЛИКа
             if (item.channels.includes('КЛИК')) {
-                
-                // 1. ПРОВЕРКА ПЕРЕСЕЧЕНИЯ ВРЕМЕНИ
                 const timeCollision = db.find(p => 
                     p.date === item.date && 
                     p.time === item.time && 
@@ -1086,7 +1272,6 @@
                     return;
                 }
 
-                // 2. ПРОВЕРКА ДНЕВНОГО ЛИМИТА И SMART SHIFTING
                 const dayKlikPosts = db.filter(p => p.date === item.date && p.channels.includes('КЛИК') && p.id !== item.id);
 
                 if (dayKlikPosts.length >= KLIK_DAILY_LIMIT) {
@@ -1199,22 +1384,38 @@
         }
         function closeListModal() { document.getElementById('listModal').style.display = 'none'; }
 
-        // --- ЛОГИКА БАНКА ИДЕЙ (РЕДАКТИРОВАНИЕ/УДАЛЕНИЕ) ---
-        function openIdeaBank(rubric) {
+        // --- ЛОГИКА БАНКА ИДЕЙ ---
+        function switchIbOrg(org) {
+            currentIdeaBankOrg = org;
+            openIdeaBank(currentIbRubric, org);
+        }
+
+        function openIdeaBank(rubric, org = null) {
+            if (org) currentIdeaBankOrg = org;
+            currentIbRubric = rubric;
+            
+            // Если ideaBank пуст для этой орги, инитим
+            if (!ideaBank[currentIdeaBankOrg]) ideaBank[currentIdeaBankOrg] = {};
+
             const content = document.getElementById('ideaBankContent');
             const title = document.getElementById('ideaBankTitle');
-            const subtitle = document.getElementById('ideaBankSubtitle');
             const addFormContainer = document.getElementById('addIdeaContainer');
+            const tabsContainer = document.getElementById('ideaBankOrgTabs');
+            
             content.innerHTML = '';
+            
+            // Рендер вкладок организаций
+            tabsContainer.innerHTML = ['КОС', 'СРТ', 'СИ'].map(o => `
+                <button class="btn ${currentIdeaBankOrg === o ? 'btn-primary' : ''}" style="padding: 6px 16px; font-size: 13px; font-weight: 600; border-bottom-left-radius: 0; border-bottom-right-radius: 0; border-bottom: none;" onclick="switchIbOrg('${o}')">${o}</button>
+            `).join('');
             
             let formHtml = '';
             
             if (rubric === 'ALL') {
                 title.innerText = "Весь банк идей";
-                subtitle.innerText = "Общий список всех тем. Выберите рубрику для добавления в план.";
                 
-                Object.keys(ideaBank).forEach(cat => {
-                    const ideas = ideaBank[cat];
+                Object.keys(ideaBank[currentIdeaBankOrg]).forEach(cat => {
+                    const ideas = ideaBank[currentIdeaBankOrg][cat];
                     if(ideas && ideas.length > 0) {
                         const h = document.createElement('div');
                         h.className = 'idea-category-header';
@@ -1223,6 +1424,10 @@
                         renderIdeaList(ideas, cat, content);
                     }
                 });
+
+                if (Object.keys(ideaBank[currentIdeaBankOrg]).length === 0) {
+                    content.innerHTML = `<div style="font-size:13px; color:var(--text-muted); padding:16px; background: var(--bg-body); border-radius: var(--radius-sm); border: 1px dashed var(--border-dark); text-align: center; margin-top: 16px;">Банк идей для ${currentIdeaBankOrg} пока пуст.</div>`;
+                }
 
                 let options = '';
                 Object.keys(rubricsMap).forEach(r => { options += `<option value="${r}">${r}</option>`; });
@@ -1233,19 +1438,17 @@
                         <option value="" disabled selected>Выберите рубрику...</option>
                         ${options}
                     </select>
-                    <input type="text" id="newIdeaText" placeholder="Новая идея..." required style="flex: 1; padding: 10px 14px; border: 1px solid var(--border-dark); border-radius: var(--radius-sm); font-size: 13px;">
+                    <input type="text" id="newIdeaText" placeholder="Новая идея для ${currentIdeaBankOrg}..." required style="flex: 1; padding: 10px 14px; border: 1px solid var(--border-dark); border-radius: var(--radius-sm); font-size: 13px;">
                     <button type="submit" class="btn btn-primary">Добавить</button>
                 </form>`;
                 
             } else {
                 title.innerText = `Идеи: ${rubric}`;
-                subtitle.innerText = "Кликните на идею, чтобы создать пост";
-                
-                renderIdeaList(ideaBank[rubric] || [], rubric, content);
+                renderIdeaList(ideaBank[currentIdeaBankOrg][rubric] || [], rubric, content);
 
                 formHtml = `
                 <form onsubmit="handleAddNewIdea(event, '${rubric}')" style="display: flex; gap: 12px;">
-                    <input type="text" id="newIdeaText" placeholder="Добавить новую идею в рубрику..." required style="flex: 1; padding: 10px 14px; border: 1px solid var(--border-dark); border-radius: var(--radius-sm); font-size: 13px;">
+                    <input type="text" id="newIdeaText" placeholder="Добавить идею в рубрику (${currentIdeaBankOrg})..." required style="flex: 1; padding: 10px 14px; border: 1px solid var(--border-dark); border-radius: var(--radius-sm); font-size: 13px;">
                     <button type="submit" class="btn btn-primary">Добавить</button>
                 </form>`;
             }
@@ -1256,7 +1459,7 @@
 
         function renderIdeaList(ideas, rubric, container) {
             if (!ideas || ideas.length === 0) {
-                container.innerHTML += `<div style="font-size:13px; color:var(--text-muted); padding:16px; background: var(--bg-body); border-radius: var(--radius-sm); border: 1px dashed var(--border-dark); text-align: center; margin-top: 16px;">Пока нет идей. Добавьте первую!</div>`;
+                container.innerHTML += `<div style="font-size:13px; color:var(--text-muted); padding:16px; background: var(--bg-body); border-radius: var(--radius-sm); border: 1px dashed var(--border-dark); text-align: center; margin-top: 16px;">Пока нет идей в этой рубрике. Добавьте первую!</div>`;
                 return;
             }
             ideas.forEach((idea, index) => {
@@ -1279,6 +1482,10 @@
                     closeIdeaBank(); openAddModal();
                     document.getElementById('f_theme').value = idea;
                     document.getElementById('f_rubric').value = rubric;
+                    
+                    // Проставляем организацию для которой была взята идея
+                    document.querySelectorAll('.form-org').forEach(c => c.checked = (c.value === currentIdeaBankOrg));
+
                     updateType(); 
                     const themeInput = document.getElementById('f_theme');
                     themeInput.style.boxShadow = "0 0 0 3px rgba(79, 70, 229, 0.3)";
@@ -1301,7 +1508,7 @@
                 delBtn.onclick = (e) => {
                     e.stopPropagation();
                     if(confirm("Удалить идею из банка?")) {
-                        ideaBank[rubric].splice(index, 1);
+                        ideaBank[currentIdeaBankOrg][rubric].splice(index, 1);
                         saveIdeaBank();
                         openIdeaBank(document.getElementById('ideaBankTitle').innerText.includes("Весь") ? 'ALL' : rubric);
                     }
@@ -1349,7 +1556,7 @@
             saveBtn.onclick = () => {
                 const newText = input.value.trim();
                 if(newText) {
-                    ideaBank[rubric][index] = newText;
+                    ideaBank[currentIdeaBankOrg][rubric][index] = newText;
                     saveIdeaBank();
                     openIdeaBank(document.getElementById('ideaBankTitle').innerText.includes("Весь") ? 'ALL' : rubric);
                 }
@@ -1376,8 +1583,8 @@
             
             if(text === "") return;
 
-            if (!ideaBank[rubric]) ideaBank[rubric] = [];
-            ideaBank[rubric].push(text);
+            if (!ideaBank[currentIdeaBankOrg][rubric]) ideaBank[currentIdeaBankOrg][rubric] = [];
+            ideaBank[currentIdeaBankOrg][rubric].push(text);
             
             saveIdeaBank();
             openIdeaBank(targetMode); 
